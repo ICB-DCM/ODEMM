@@ -5,7 +5,6 @@ function s = getScalingFactors(varargin)
 % USAGE:
 % s = getScalingFactors(ExpC_1, ExpC_2)
 %
-
 % Parameters: 
 % varargin:
 % ExpC

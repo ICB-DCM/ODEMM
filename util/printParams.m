@@ -1,5 +1,5 @@
 function [] = printParams(parameters,varargin)
-% help function to print parameters names and values
+% Help function to print parameters names and values.
 %
 % USAGE:
 % [] = printParams(parameters,xi)
@@ -12,7 +12,6 @@ function [] = printParams(parameters,varargin)
 % Required fields of parameters:
 % name = {'name1',...} names of parameters
 %
-
 if nargin >= 2
     xi = varargin{1};
 end
