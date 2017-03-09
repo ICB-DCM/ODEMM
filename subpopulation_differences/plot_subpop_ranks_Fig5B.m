@@ -135,3 +135,6 @@ set(gca,'Position',[0.2,0.2,0.7,0.7],...
 
 set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 3.2 1.5])
 print('-depsc','./project/figures/subpop_BICweights')
+
+set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 2.5 1.2])
+print('-depsc','./project/figures/subpop_BICweights_Suppl')

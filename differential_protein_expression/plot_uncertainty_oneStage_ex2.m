@@ -205,11 +205,11 @@ for j = 1:length(alpha)
     fill(pars_1D.CI.PL(ind(i),[1,2,2,1]),(i*(-2-delta)-1)+(0.45+j*0.05)*0.5*[+1,+1,-1,-1],'b','facecolor',color.CI_marg(j,:)); hold on;
     %fill((pars_2D.MS.par(ind(i))+epsilon1*[-1,+1,+1,-1]),(i*(-2-delta))+0.45*[+1,+1,-1,-1],'b','facecolor',color.CI_full(end,:)); hold on;
     %fill((pars_1D.MS.par(ind(i))+epsilon1*[-1,+1,+1,-1]),(i*(-2-delta)-1)+0.45*[+1,+1,-1,-1],'b','facecolor',color.CI_marg(end,:)); hold on;
-    plot([xi_true(ind(i)), xi_true(ind(i))],[((i*(-2-delta)-1)+((i+1)*(-2-delta)+0))/2,(((i-1)*(-2-delta)-1)+((i)*(-2-delta)+0))/2],'-','color',color.true,'LineWidth',0.8);
 end
 plot([pars_1D.MS.par(ind(i)),pars_1D.MS.par(ind(i))],(i*(-2-delta)-1)+0.45*[+1,-1],'LineWidth',1.5,'color',color.CI_marg(end,:)); hold on;
 plot([pars_2D.MS.par(ind(i)),pars_2D.MS.par(ind(i))],(i*(-2-delta))+0.45*[+1,-1],'LineWidth',1.5,'color',color.CI_full(end,:)); hold on;
-    
+     plot([xi_true(ind(i)), xi_true(ind(i))],[((i*(-2-delta)-1)+((i+1)*(-2-delta)+0))/2,(((i-1)*(-2-delta)-1)+((i)*(-2-delta)+0))/2],'-','color',color.true,'LineWidth',0.8);
+   
 set(gca,'xscale','lin',...
     'xlim',[0.4,0.6],...
     'xtick',[0.4,0.5,0.6],...
