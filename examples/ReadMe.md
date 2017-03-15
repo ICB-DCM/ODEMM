@@ -2,7 +2,7 @@
 # Examples 
 
 The following examples are included: 
-* Conversion reaction (`examples/conversion_reaction/`)
+* Conversion reaction (`examples/conversion_reaction`)
 * Differential protein expression (`examples/differential_protein_expression`)
 * Subpopulation differences in NGF-induced Erk1/2 signaling (`examples/subpopulation_differences`)
 * Differences mediated by extracellular scaffolds in NGF-induced Erk1/2 signaling (`examples/ECM_differences`)
