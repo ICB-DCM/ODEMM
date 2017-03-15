@@ -1,10 +1,5 @@
-%function [r1,r2,r3,y,r4,sy] = simulate_SP_twostage(t,xi,u)
 function varargout = simulate_onestage_SP(t,xi,u)
-%%
-%'log(\lambda_{lambda})',log(\lambda_{A})',...
-%                   'log(\lambda_{B}',mgamma
-%                   'log(sigma_gamma)'
-%                
+               
 estruct.beta = @(xi) [xi(1);
                   xi(2);
                   xi(3);
