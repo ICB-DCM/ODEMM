@@ -1,4 +1,4 @@
-function varargout = logLikelihood(xi,M,D,varargin)
+function varargout = logLikelihood_extended(xi,M,D,varargin)
 % This function evaluates the likelihood function for a given model, data
 % and parameter vector
 %
@@ -66,7 +66,7 @@ function varargout = logLikelihood(xi,M,D,varargin)
 %   replicate(r).y:  n_u x n_t x n_cells x n_dim data matrix of replicate r in
 %                           experiment e (only needed if individual replicates should be
 %                       fitted)
-%                  
+%
 % Optional fields of options:
 %    use_robust: robust calculation of mixture probability\n
 %            = true: uses reformulation (default)\n
@@ -117,7 +117,7 @@ if nargin < 5 || isempty(conditions)
 end
 
 for c = 1:length(conditions)
-    tempsim = cputime;                                    
+    tempsim = cputime;
     if nargout >=2
         try
             [status,~,~,X_c{c},~,dXdtheta_c{c}] = M.model(conditions(c).time,M.theta(xi,conditions(c).input),conditions(c).input);
@@ -193,12 +193,21 @@ for e = I % Loop: Experimental conditions
                         X(:,D(e).n_dim+n) = covscale(n)*Z(:,D(e).n_dim+n);
                     end
                 end
-                if D(e).n_dim == 1
-                    sigma{s} = M.sigma{s,e}(D(e).t,X,xi,u_dse);
-                    mu{s} = M.mu{s,e}(D(e).t,X,sigma{s},xi,u_dse);
-                else
-                    Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
-                    mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
+                switch M.distribution{s,e}
+                    case {'logn','logn_median','logn_mean','norm','t'}
+                        if D(e).n_dim == 1
+                            sigma{s} = M.sigma{s,e}(D(e).t,X,xi,u_dse);
+                            mu{s} = M.mu{s,e}(D(e).t,X,sigma{s},xi,u_dse);
+                        else
+                            Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
+                            mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
+                        end
+                    case 't'
+                        nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
+                    case 'neg_binomial'
+                        phi{2,s} = M.p{s,e}(D(e).t,X,xi,u_dse); %p
+                        phi{1,s} = M.r{s,e}(D(e).t,X,phi{2,s},xi,u_dse); %r
+                        
                 end
                 w{s} = M.w{s,e}(D(e).t,X,xi,u_dse);
                 % Sensitivities
@@ -206,8 +215,8 @@ for e = I % Loop: Experimental conditions
                     dXdxi{s} = zeros(numel([M.mean_ind{s,e},M.var_ind{s,e},M.w_ind{s,e}]),length(xi),length(D(e).t));
                     for k = 1:length(D(e).t)
                         sc = M.scaling{r,e}(xi,u_dse);
-                        dsdxi_temp = M.dscalingdxi{r,e}(xi,[D(e).u(:,d);M.u{s,e}]);
-                        dbdxi_temp = M.doffsetdxi{r,e}(xi,[D(e).u(:,d);M.u{s,e}]);
+                        dsdxi_temp = M.dscalingdxi{r,e}(xi,u_dse);
+                        dbdxi_temp = M.doffsetdxi{r,e}(xi,u_dse);
                         for n = 1:D(e).n_dim
                             dXdxi{s}(n,:,k) = sc(n)*dZdtheta(n,:,k)*dthetadxi{s} + ...
                                 dsdxi_temp(n,:)*Z(k,n) + dbdxi_temp(n,:);
@@ -227,14 +236,22 @@ for e = I % Loop: Experimental conditions
                                     covscale(n)*dZdtheta(D(e).n_dim+n,:,k)*dthetadxi{s};
                             end
                         end
-                        if D(e).n_dim == 1
-                            dsigmadxi{s} = M.dsigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,D(e).u(:,d));
-                            dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},sigma{s},dsigmadxi{s},xi,D(e).u(:,d));
-                        else
-                            dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,D(e).u(:,d));
-                            dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},Sigma{s},dSigmadxi{s},xi,D(e).u(:,d));
+                        switch M.distribution{s,e}
+                            case {'logn','logn_median','logn_mean','norm','t'}
+                                if D(e).n_dim == 1
+                                    dsigmadxi{s} = M.dsigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,D(e).u(:,d));
+                                    dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},sigma{s},dsigmadxi{s},xi,D(e).u(:,d));
+                                else
+                                    dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,D(e).u(:,d));
+                                    dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},Sigma{s},dSigmadxi{s},xi,D(e).u(:,d));
+                                end
+                            case 't'
+                                dnudxi{s} =  M.dmudxi{s,e}(D(e).t,X,dXdxi{s},xi,D(e).u(:,d));
+                            case 'neg_binomial'
+                                dphidxi{1,s} = 
+                                dphidxi{2,s} = 
                         end
-                        dwdxi{s} = M.dwdxi{s,e}(D(e).t,X,dXdxi{s},xi,[D(e).u(:,d);M.u{s,e}]);
+                        dwdxi{s} = M.dwdxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                     end % time loop
                 end % gradient
             end % subpopulation
