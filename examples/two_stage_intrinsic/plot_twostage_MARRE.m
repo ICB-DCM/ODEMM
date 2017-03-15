@@ -142,7 +142,7 @@ disp(['BIC-min(BIC) for RRE: ' num2str(BICs(2)-min(BICs))]);
 %% Profiles
 xi_true = log10([10,10,20,1,5,0.1]);
 xi_true(7) = 0.5;
-names = {'k_1','k_{2,1}','k_{2,2}','k_3','k_4','k_5','w'};
+names = {'k_1','k_{2,1}','k_{2,2}','k_3','k_4','k_5','w_1'};
 xlimits{1} = [8,12];
 xlimits{2} = [8,12];
 xlimits{3} = [15,25];
