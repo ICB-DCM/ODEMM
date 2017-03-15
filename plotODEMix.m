@@ -12,17 +12,17 @@ function varargout = plotODEMix(varargin)
 % Parameters:
 % D: data struct @see
 % M: model struct @see
-% xi: parameter vector 
+% xi: parameter vector
 % I: (optional) indices for which the data and model should be visualized,
 % the whole data set is visualized if I = []
 % options: plotting options
 % tu_ind{e}: struct of indices for the time points/doses for which the data and model
 % should be visualized
-% 
+%
 % Return values:
-% fh{e}: struct of function handles for each data set 
+% fh{e}: struct of function handles for each data set
 % fhm: struct of function handles for the plots of the marginals
-% 
+%
 % Optional fields of options:
 %
 %
@@ -82,6 +82,7 @@ options.model.levelsets = 5;
 options.model.level_linewidth = 1.2;
 options.model.colormap = 'autumn';
 % data
+options.data.kde = false;
 options.data.plot = 'filled'; %'empty'
 options.data.col  = 'b';
 options.data.fill_col = 0.7*[1,1,1];
@@ -97,6 +98,8 @@ options.x_scale = 'lin';
 options.simulate_musigma = false;
 options.sameplot = false;
 options.subplot_lin = false;
+options.plainstyle = false;
+options.legendflag = true;
 
 for e = 1:length(D)
     options.boundaries(e).y_min = []; % 1 x n_meas vector
@@ -122,6 +125,14 @@ if ~iscell(options.data.col)
     options.data = rmfield(options.data, 'col');
     for e = I
         options.data.col{e} = temp;
+    end
+end
+
+if ~iscell(options.data.fill_col)
+    temp = options.data.fill_col;
+    options.data = rmfield(options.data, 'fill_col');
+    for e = I
+        options.data.fill_col{e} = temp;
     end
 end
 
@@ -166,18 +177,15 @@ for e = I
     end
     %% open figures
     if (~options.sameplot || mod(e,2)) & ~options.hold_on
-        switch plotcase
-            case {'one dose more tps','more dose one tp'}
-                if D(e).n_dim > 1 && options.marginals
-                    for n = 1:D(e).n_dim
-                        fhm{e,n} = figure('name',[D(e).name ...
-                            ', marginal for ' D(e).measurand{n} '']);
-                    end
-                end
-                fh{e} = figure('name',[D(e).name]);
-            otherwise
-                error('Plotcase not clear!')
+        
+        if D(e).n_dim > 1 && options.marginals
+            for n = 1:D(e).n_dim
+                fhm{e,n} = figure('name',[D(e).name ...
+                    ', marginal for ' D(e).measurand{n} '']);
+            end
         end
+        fh{e} = figure('name',[D(e).name]);
+        
     end
     %% evaluate model
     inds = 0;
@@ -195,46 +203,81 @@ for e = I
                 if ~isempty(M)
                     evalModel(xi,M,D,e,r,d,X_c,options,conditions);
                 end
-                [lim,hists,grids]=setYminmaxHists(D,e,d,options,inds(ind));
-                for k=1:numel(tu_ind{e})%size(D(e).u,2)
-                    if ~isempty(M)
-                        evalModel(xi,M,D,e,r,tu_ind{e}(d),X_c,options,conditions);
-                    end
+                for k=1:numel(tu_ind{e})
                     [lim,hists,grids]=setYminmaxHists(D,e,tu_ind{e}(d),options,inds(ind));
                     if D(e).n_dim == 2 && ~isempty(M)
                         if inds(ind) == 0
-                            
-                            for i = 1:2
-                                subplot(2,numel(tu_ind{e}),c);
-                                if i == 1
-                                    c = c+numel(tu_ind{e});
-                                else
-                                    c = c-numel(tu_ind{e})+1;
+                            if options.data.kde
+                                for i = 1:2
+                                    subplot(2,numel(tu_ind{e}),c);
+                                    if i == 1
+                                        c = c+numel(tu_ind{e});
+                                    else
+                                        c = c-numel(tu_ind{e})+1;
+                                    end
+                                    evalPdf(M,D,e,d,tu_ind{e}(k),options,...
+                                        (options.legendflag & k==numel(tu_ind{e})),...
+                                        inds(ind),lim,hists,grids,i==2,i==1);
                                 end
-                                evalPdf(M,D,e,d,tu_ind{e}(k),options,0,inds(ind),lim,hists,grids,i==2,i==1);
+                            else
+                                sx = round(sqrt(numel(tu_ind{e})));
+                                sy = ceil(numel(tu_ind{e})/sx);
+                                subplot(sx,sy,k);
+                                evalPdf(M,D,e,d,tu_ind{e}(k),options,...
+                                    (options.legendflag & k==numel(tu_ind{e})),...
+                                    inds(ind),lim,hists,grids,1,0);
                             end
                         else
-                            subplot(1,numel(tu_ind{e}),c);
+                            if options.subplot_lin
+                                subplot(1,numel(tu_ind{e}),k);
+                            else
+                                sx = round(sqrt(numel(tu_ind{e})));
+                                sy = ceil(numel(tu_ind{e})/sx);
+                                subplot(sx,sy,k);
+                            end
                             c=c+1;
-                            evalPdf(M,D,e,d,tu_ind{e}(k),options,0,inds(ind),lim,hists,grids,1,1);
-                            
+                            evalPdf(M,D,e,d,tu_ind{e}(k),options,...
+                                (options.legendflag & k==numel(tu_ind{e})),...
+                                inds(ind),lim,hists,grids,1,1);
                         end
                     elseif D(e).n_dim == 2 && isempty(M)
-                        subplot(1,numel(tu_ind{e}),k);
-                        evalPdf(M,D,e,d,tu_ind{e}(k),options,0,inds(ind),lim,hists,grids,0,1);
-                    else
-                        subplot(1,numel(tu_ind{e}),k);
-                        evalPdf(M,D,e,d,tu_ind{e}(k),options,0,inds(ind),lim,hists,grids,1,1);
-                        if tu_ind{e}(k)~=1
-                            set(gca,'xtick','');
-                            axis off
+                        
+                        if options.subplot_lin
+                            subplot(1,numel(tu_ind{e}),k);
                         else
-                            set(gca,'xtick',[1e2,1e3,1e4]);
+                            sx = round(sqrt(numel(tu_ind{e})));
+                            sy = ceil(numel(tu_ind{e})/sx);
+                            subplot(sx,sy,k);
                         end
-                        set(gca,'ytick','','XMinorTick','off');
+                        evalPdf(M,D,e,d,tu_ind{e}(k),options,...
+                            (options.legendflag & k==numel(tu_ind{e})),...
+                            inds(ind),lim,hists,grids,0,1);
+                    else
+                        if options.subplot_lin
+                            subplot(1,numel(tu_ind{e}),k);
+                        else
+                            sx = round(sqrt(numel(tu_ind{e})));
+                            sy = ceil(numel(tu_ind{e})/sx);
+                            subplot(sx,sy,k);
+                        end
+                        evalPdf(M,D,e,d,tu_ind{e}(k),options,...
+                            (options.legendflag & k==numel(tu_ind{e})),...
+                            inds(ind),lim,hists,grids,1,1);
+                        if tu_ind{e}(k)~=1
+                            if options.plainstyle
+                                set(gca,'xtick','');
+                                axis off
+                            end
+                        end
+                        if options.plainstyle
+                            set(gca,'ytick','','XMinorTick','off');
+                        end
+                        
                         set(gca,'ticklength',2*get(gca,'ticklength'))
                         box off
-                        view(90,-90);
+                        if options.subplot_lin
+                            view(90,-90);
+                        end
                     end
                 end
             case 'more dose one tp'
@@ -242,55 +285,83 @@ for e = I
                     figure(fhm{e,inds(ind)});
                 else
                     figure(fh{e});
-                    %                             end
                 end
                 k=1;
                 c=1;
-                for d=1:numel(tu_ind{e})%size(D(e).u,2)
+                for d=1:numel(tu_ind{e})
                     if ~isempty(M)
                         evalModel(xi,M,D,e,r,tu_ind{e}(d),X_c,options,conditions);
                     end
-                    %                         if ~options.sameplot || mod(e,2)
                     [lim,hists,grids]=setYminmaxHists(D,e,tu_ind{e}(d),options,inds(ind));
-                    %                         else
-                    %                             [lim,hists,grids]=setYminmaxHists(D,e-1,tu_ind{e}(d),options,inds(ind));
-                    %                         end
+
                     if D(e).n_dim == 2 && ~isempty(M)
                         if inds(ind) == 0
-                            for i = 1:2
-                                %subplot(1,size(D(e).u,2),d);
-                                subplot(2,numel(tu_ind{e}),c);
-                                if i == 1
-                                    c=c+numel(tu_ind{e});
-                                else
-                                    c = c-numel(tu_ind{e})+1;
+                            if options.data.kde
+                                for i = 1:2
+                                    subplot(2,numel(tu_ind{e}),c);
+                                    if i == 1
+                                        c = c+numel(tu_ind{e});
+                                    else
+                                        c = c-numel(tu_ind{e})+1;
+                                    end
+                                    evalPdf(M,D,e,tu_ind{e}(d),k,options,...
+                                        (options.legendflag & d==numel(tu_ind{e})),...
+                                        inds(ind),lim,hists,grids,i==2,i==1);
                                 end
-                                evalPdf(M,D,e,tu_ind{e}(d),k,options,0,inds(ind),lim,hists,grids,i==2,i==1);
-                            end
+                            else
+                                sx = round(sqrt(numel(tu_ind{e})));
+                                sy = ceil(numel(tu_ind{e})/sx);
+                                subplot(sx,sy,d);
+                                evalPdf(M,D,e,tu_ind{e}(d),k,options,...
+                                    (options.legendflag & d==numel(tu_ind{e})),...
+                                    inds(ind),lim,hists,grids,1,0);
+                            end 
                         else
-                            subplot(1,numel(tu_ind{e}),c);
+                            if options.subplot_lin
+                                subplot(1,numel(tu_ind{e}),d);
+                            else
+                                sx = round(sqrt(numel(tu_ind{e})));
+                                sy = ceil(numel(tu_ind{e})/sx);
+                                subplot(sx,sy,d);
+                            end
                             c=c+1;
                             evalPdf(M,D,e,tu_ind{e}(d),k,options,0,inds(ind),lim,hists,grids,1,1);
                         end
                     elseif D(e).n_dim == 2 && isempty(M)
-                        subplot(1,numel(tu_ind{e}),d);
-                        evalPdf(M,D,e,tu_ind{e}(d),k,options,0,inds(ind),lim,hists,grids,0,1);
-                    else
-                        subplot(1,numel(tu_ind{e}),d);
-                        evalPdf(M,D,e,tu_ind{e}(d),k,options,0,inds(ind),lim,hists,grids,1,1);
-                        if tu_ind{e}(d)~=1
-                            set(gca,'xtick','');
-                            axis off
+                        if options.subplot_lin
+                            subplot(1,numel(tu_ind{e}),d);
                         else
-                            set(gca,'xtick',[1e2,1e3,1e4]);
+                            sx = round(sqrt(numel(tu_ind{e})));
+                            sy = ceil(numel(tu_ind{e})/sx);
+                            subplot(sx,sy,d);
                         end
                         
-                        set(gca,'xlim',[1e2,2e4]);
-                        set(gca,'ylim',[0,0.12]);
-                        set(gca,'ytick','','XMinorTick','off');
+                        evalPdf(M,D,e,tu_ind{e}(d),k,options,0,inds(ind),lim,hists,grids,0,1);
+                    else
+                        if options.subplot_lin
+                            subplot(1,numel(tu_ind{e}),d);
+                        else
+                            sx = round(sqrt(numel(tu_ind{e})));
+                            sy = ceil(numel(tu_ind{e})/sx);
+                            subplot(sx,sy,d);
+                        end
+                        
+                        evalPdf(M,D,e,tu_ind{e}(d),k,options,0,inds(ind),lim,hists,grids,1,1);
+                        
+                        if tu_ind{e}(d)~=1
+                            if options.plainstyle
+                                set(gca,'xtick','');
+                                axis off
+                            end
+                        end
+                        if options.plainstyle
+                            set(gca,'ytick','','XMinorTick','off');
+                        end
                         set(gca,'ticklength',2*get(gca,'ticklength'))
                         box off
-                        view(90,-90);
+                        if options.subplot_lin
+                            view(90,-90);
+                        end
                     end
                 end
             otherwise
@@ -336,7 +407,7 @@ for s = 1:M.n_subpop
     X(:,1:D(e).n_dim) = bsxfun(@plus,bsxfun(@times,M.scaling{r,e}(xi,u_dse)',Z(:,1:D(e).n_dim)),...
         M.offset{r,e}(xi,u_dse)');
     if ~isempty(M.var_ind{s,e})
-        s_temp= M.scaling{r,e}(xi,u_dse); %todo code verschönern
+        s_temp= M.scaling{r,e}(xi,u_dse); 
         temp = tril(ones(D(e).n_dim,D(e).n_dim));
         temp(temp==0) = NaN;
         covscale = (s_temp*s_temp').*temp;
@@ -509,7 +580,6 @@ if (~options.replicates && ~isempty(D(e).y)) || ...
         y = y((sum(~isnan(y),2) == size(y,2)),:);
         if D(e).n_dim == 1 || ind > 0
             h = hist(y,y_hist);
-            %h = (h(2:end)'/sum(h(2:end-1)));
             h = (h(1:end-1)'/sum(h(1:end-1)));
         end
     end
@@ -578,7 +648,6 @@ if (~options.replicates && ~isempty(D(e).y) && plotData) || ...
             hs=scatter(log10(y(:,1)),log10(y(:,2)),options.data.markersize,'.'); hold on;
             set(hs,'MarkerEdgeColor',options.data.col{e});
             set(hs,'MarkerEdgeAlpha',0.1);
-            %[X1,X2] = meshgrid(log10(y_grid{1}),log10(y_grid{2}));
             [~,kdensity,X1,X2]=kde2d(log10(y));
             contour(X1,X2,kdensity,options.model.levelsets{e,d},'color',options.model.col{e},...
                 'LineWidth',options.model.level_linewidth); hold on;
@@ -631,10 +700,31 @@ if ~isempty(M) && plotModel
 end
 
 if D(e).n_dim == 1 || ind > 0
+    
+    if ~options.plainstyle
+        if ind > 0
+            xlabel(D(e).measurand{ind});
+        else
+            xlabel(D(e).measurand);
+        end
+        ylabel('frequency');
+    end
     if plotModel
         xlim([y_min{e},y_max{e}]);
         if ~isempty(options.z_max{e})
             ylim([0,options.z_max{e}]);
+        end
+    end
+    if legendflag
+        if isempty(M)
+            legend('data')
+        else
+            if options.model.subpopulations
+                legend([legendhandles.data,legendhandles.model,legendhandles.subpop],...
+                    'data','model','subpopulations')
+            else
+                legend('data','model')
+            end
         end
     end
 else
@@ -645,8 +735,6 @@ else
     if plotModel
         set(gca,'xscale',options.x_scale);
         set(gca,'yscale',options.x_scale);
-        %  set(gca,'ytick',[1e2,1e3,1e4]); %hier
-        %  set(gca,'xtick',[1e2,1e3,1e4]);
     end
     if ~options.sameplot || mod(e,2)
         if plotModel
@@ -660,13 +748,15 @@ else
     if options.switch_axes
         set(gca,'ydir','reverse');
     end
-    if legendflag
-        if isempty(M)
-            legend('data')
-        else
+    if ~options.plainstyle
+        ylabel(D(e).measurand{1});
+        xlabel(D(e).measurand{2});
+        
+        if ~options.data.kde & legendflag
             legend('data','model')
             colormap(options.model.colormap{e})
         end
+        
     end
 end
 if ~isempty(options.xtick{e})
