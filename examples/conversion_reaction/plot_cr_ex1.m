@@ -17,6 +17,8 @@ options_plot.model.points = 200;
 options_plot.boundaries(1).x_min = [0.4]; % 1 x n_meas vector
 options_plot.boundaries(1).x_max = [0.8];
 options_plot.subplot_lin = 1;
+options_plot.plainstyle =  1;
+options_plot.legendflag =  0;
 options_plot.model.lw =  1;
 options_plot.data.lw =  0.7;
 options_plot.data.fill_col{1} = color.data;
@@ -25,8 +27,8 @@ options_plot.model.ls = '-';
 
 options_plot.boundaries(1).y_min = 0.35;
 options_plot.boundaries(1).y_max = 0.83;
-%plotODEMix(D,M,xi,[],options_plot);
-plotODEMix(D,[],[],[],options_plot);
+plotODEMix(D,M,xi,[],options_plot);
+%%
 for i = 1:5
     s = subplot(1,5,i);
     ylim([0,0.15])
@@ -107,16 +109,13 @@ for j = 1:length(alpha)
     pars = getParameterConfidenceIntervals(parameters,alpha(j));
     pars.CI.PL = max(min(pars.CI.PL,xi_max),xi_min);
     fill(pars.CI.PL(5,[1,2,2,1]),((-2-delta))+(0.95+j*0.05)*0.5*[+1,+1,-1,-1],'b','facecolor',color.SP_CI(j,:)); hold on;
-    %lh(1) = fill((pars.MS.par(5)+epsilon1*0.15*[-1,+1,+1,-1]),((-2-delta))+0.7*[+1,+1,-1,-1],'b','facecolor',color.SP_CI(end,:)); hold on;
     plot([xi_true(5), xi_true(5)],[-3,-1],'-','color',color.true,'LineWidth',0.8);
 end
 plot([pars.MS.par(5),pars.MS.par(5)],((-2-delta))+0.7*[+1,-1],'LineWidth',1,'color',color.SP_CI(end,:)); hold on;
 box off
 set(gca,'xscale','lin',...
     'xlim',[-1.05,-0.95],...
-    'xtick',[-1.05,-1,-0.95],'xticklabel',{'10^{-1.05}','10^{-1}', '10^{-0.95}'},......
-    ...'xtick',[log10(0.095),log10(0.1),log10(0.105)],...
-    ...'xticklabel',{'0.095','0.1', '0.015'},...
+    'xtick',[-1.05,-1,-0.95],'xticklabel',{'10^{-1.05}','10^{-1}', '10^{-0.95}'},...
     'ytick',[],...
     'Tickdir','out',...
     'yticklabel',{});
@@ -126,53 +125,16 @@ for j = 1:length(alpha)
     pars = getParameterConfidenceIntervals(parameters,alpha(j));
     pars.CI.PL = max(min(pars.CI.PL,xi_max),xi_min);
     fill(pars.CI.PL(6,[1,2,2,1]),((-2-delta))+(0.95+j*0.05)*0.5*[+1,+1,-1,-1],'b','facecolor',color.SP_CI(j,:)); hold on;
-    %lh(1) = fill((pars.MS.par(6)+epsilon1*1*[-1,+1,+1,-1]),((-2-delta))+0.7*[+1,+1,-1,-1],'b','facecolor',color.SP_CI(end,:)); hold on;
     plot([xi_true(6), xi_true(6)],[-3,-1],'-','color',color.true,'LineWidth',0.8);    
 end
 plot([pars.MS.par(6),pars.MS.par(6)],((-2-delta))+0.7*[+1,-1],'LineWidth',1,'color',color.SP_CI(end,:)); hold on;
 box off
 set(gca,'xscale','lin',...
     'xlim',[-1.9,-1.5],...
-    'xtick',[-1.9,-1.7,-1.5],'xticklabel',{'10^{-1.9}','10^{-1.7}', '10^{-1.5}'},......
-    ...'xtick',log10([0.012 0.02 0.028]),...
-    ...'xticklabel',{'0.012','0.02', '0.028'},...
+    'xtick',[-1.9,-1.7,-1.5],'xticklabel',{'10^{-1.9}','10^{-1.7}', '10^{-1.5}'},...
     'ytick',[],...
     'Tickdir','out',...
     'yticklabel',{});
 set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 3 2])
 print('-dpdf','./project/figures/uncertainty_mainman');
 
-%% Supplement - Convergence
-% figure
-% conv = conv([1,2,3,   4     7    10     5     9     8     6]);
-%
-% b = bar([conv;ones(1,numel(conv))]);
-%
-% for i = 1:numel(conv)
-%     if i < 4
-%         b(i).FaceColor = color.RRE;
-%     else
-%         b(i).FaceColor = color.SP;
-%     end
-% end
-% xlim([0.6,1.4])
-% set(gca,'xtick',[]);
-% set(gca,'ytick',[0,0.5,1],'yticklabel',{'0','50','100'});
-% set(gca,'TickDir','out');
-% ylabel('convergence [%]')
-% box off;
-%
-% set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 4.5 3])
-% print('-dpdf','./project/figures/convergence_RREvsSP');
-
-%% Supplement - tcpu
-% b = boxplot(t_cpus');
-% % for i = 1:3
-% % set(boxpl(i), 'Color', col_RRE);
-% % end
-% % for i = 4:10
-% % set(boxpl(i), 'Color', col_SP);
-% % end
-% set(gca,'TickDir','out');
-% set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 4 3])
-% print('-dpdf','./project/figures/tcpu_RREvsSP');

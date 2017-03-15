@@ -20,9 +20,14 @@ options_plot.model.levelsets{1,1} = [5,15,25];
 options_plot.data.col{1} = color.data;
 options_plot.model.col{1} =  color.full;
 options_plot.subplot_lin = 1;
+options_plot.legendflag = 0;
+options_plot.plainstyle = 1;
+options_plot.data.kde = 1;
+options_plot.marginals = 1;
+
 options_plot.simulate_musigma = 1;
 
-fh = plotODEMix_forPNAS(D,M,xi,[],options_plot);
+fh = plotODEMix(D,M,xi,[],options_plot);
 
 %% modify figure
 figure(fh{1});
