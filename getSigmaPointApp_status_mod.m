@@ -1,5 +1,4 @@
 function [status,SP] = getSigmaPointApp_status_mod(varargin)
-
 % Modified version of the getSigmaPointApp.m function of the
 % SPToolbox.
 
