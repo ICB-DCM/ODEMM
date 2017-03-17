@@ -1,9 +1,9 @@
 function Sigma = func_Sigma_norm(t,x,xi,n_dim,varargin)
-% This function maps the means and variances to Sigma of a normal
-% distribution
+% This function maps the means and variances to \f$\boldsymbol{\Sigma}\f$ 
+% of the multivariate normal distribution.
 %
 % USAGE:
-% Sigma = func_Sigma_norm(t,x,xi,n_dim,noise,noisemodel)
+% Sigma = func_Sigma_norm(t,x,xi,n_dim,noise,''additive'')
 %
 % Parameters:
 % t: time vector
@@ -11,11 +11,11 @@ function Sigma = func_Sigma_norm(t,x,xi,n_dim,varargin)
 % xi: (not used, included for consistency and possible extensions)
 % n_dim: dimension of measurement
 % varargin: 
-%   noise:
-%   noisemodel:
+%   * noise: parameter for measurement noise
+%   * noisemodel: (so far only ''additive'' supported)
 %
 % Return values:
-% Sigma: n_t x n_dim x n_dim 
+% Sigma: (n_t x n_dim x n_dim) \f$\Sigma\f$ of the multivariate normal distribution. 
 
 noise = [0;0];
 noisemodel = 'additive';

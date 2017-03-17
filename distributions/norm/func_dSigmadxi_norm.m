@@ -1,26 +1,25 @@
 function dSigmadxi = func_dSigmadxi_norm(t,x,dxdxi,xi,n_dim,varargin)
-% This function maps the means and variances to Sigma of a normal
-% distribution
+% This function maps the means and variances to \f$\boldsymbol{\Sigma}\f$ 
+% of the multivariate normal distribution.
 %
 % USAGE:
-% dSigmadxi = func_dSigmadxi_norm(t,x,dxdxi,xi,n_n_dim)
-% dSigmadxi = func_dSigmadxi_norm(t,x,dxdxi,xi,n_n_dim,noise,dnoisedxi,'multiplicative')
+% dSigmadxi = func_dSigmadxi_norm(t,x,dxdxi,xi,n_n_dim)\n
+% dSigmadxi = func_dSigmadxi_norm(t,x,dxdxi,xi,n_n_dim,noise,dnoisedxi,''additive'')
 
 % Parameters:
 % t: time vector
 % x: (not used, included for consistency and possible extensions)
-% dxdxi: vector including derivatvies of means and variances
+% dxdxi: vector including derivatvies of the means and variances
 % xi: parameter vector
 % n_dim: numer of dimensions of multivariate log-normal distribution
 % varargin:
-%   noise:
-%   dnoisedxi:
-%   noisemodel:
-%       = ''multiplicative''
-%       = ''additive''
+%   * noise: parameter for measurement noise
+%   * dnoisedxi: derivative of measurement noise
+%   * noisemodel: (so far only ''additive'' supported)
 %
 % Return values:
-% dSigmadxi: n_t x n_xi x n_dim x n_dim
+% dSigmadxi: (n_t x n_xi x n_dim x n_dim) derivative of 
+% \f$\boldsymbol{\Sigma}\f$ of the multivariate normal distribution
 
 noise = [0;0];
 dnoisedxi = zeros(2,numel(xi));

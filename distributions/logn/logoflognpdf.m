@@ -1,5 +1,6 @@
 function logy = logoflognpdf(x,mu,sigma)
-% Modified version of MATLAB function LOGNPDF
+% Modified version of MATLAB function LOGNPDF such that the log-density is
+% returned.
 %
 % LOGNPDF Lognormal probability density function (pdf).
 %   Y = LOGNPDF(X,MU,SIGMA) returns values at X of the lognormal pdf with 
@@ -15,7 +16,6 @@ function logy = logoflognpdf(x,mu,sigma)
 %   References:
 %      [1] Evans, M., Hastings, N., and Peacock, B. (1993) Statistical
 %          Distributions, 2nd ed., Wiley, 170pp.
-
 %   Copyright 1993-2006 The MathWorks, Inc.
 
 

@@ -9,7 +9,7 @@ function [parameters, conditions, varargout] = getRREsigmas(parameters,condition
 %
 % Parameters:
 % parameters: parameters struct 
-% conditions: conditions struct (see ...)
+% conditions: conditions struct (see collectConditions.m)
 % varargin:
 %   options:
 %   D: data struct (see logLikelihood.m)
@@ -18,19 +18,18 @@ function [parameters, conditions, varargout] = getRREsigmas(parameters,condition
 % Return values:
 % parameters: updated parameters struct
 % conditions: updated conditions struct
-% varargout:
-%   D: updated data struct
-%
+% D: updated data struct
 %
 %  Optional fields of options:
 %  sigmas: \n
-%         = 'condition-dependent': (default) assign sigma for every time point \n
-%         = 'time-dependent': one sigma for every subpopulation and time point \n
-%         = 'only-one': only one sigma for everything \n
-%         = 'subpopulation-specific': for every subpopulation one sigma \n
-%  boundaries
-%    * .min
-%    * .max
+%      = ''condition-dependent'': (default) assign sigma for every time point \n
+%      = ''time-dependent'': one sigma for every subpopulation and time point \n
+%      = ''only-one'': only one sigma for everything \n
+%      = ''subpopulation-specific'': for every subpopulation one sigma \n
+%  boundaries: boundaries for optimization for the sigma parameters with
+%  fields
+%    * min
+%    * max
 % 
 % Generated fields of parameters:
 %   names: names for sigma parameters are added
@@ -39,7 +38,6 @@ function [parameters, conditions, varargout] = getRREsigmas(parameters,condition
 %   sigma: (if n_dim = 1)
 %   Sigma: (if n_dim = 2)
 %   
-%
 
 options.sigmas = 'condition-dependent';
 if nargin >= 3

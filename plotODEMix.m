@@ -10,22 +10,20 @@ function varargout = plotODEMix(varargin)
 % [fh,fhm] = plotODEMix(...)
 %
 % Parameters:
-% D: data struct @see
-% M: model struct @see
-% xi: parameter vector
-% I: (optional) indices for which the data and model should be visualized,
-% the whole data set is visualized if I = []
-% options: plotting options
-% tu_ind{e}: struct of indices for the time points/doses for which the data and model
+% varargin:
+% * D: data struct
+% * M: model struct 
+% * xi: parameter vector
+% * I: (optional) indices for which the data and model should be visualized,
+%   the whole data set is visualized if I = []
+% * options: plotting options
+% * tu_ind{e}: struct of indices for the time points/doses for which the data and model
 % should be visualized
 %
 % Return values:
-% fh{e}: struct of function handles for each data set
+% fh: struct of function handles for each data set
 % fhm: struct of function handles for the plots of the marginals
-%
-% Optional fields of options:
-%
-%
+
 
 %% Assign inputs
 D = varargin{1};

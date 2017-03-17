@@ -1,26 +1,30 @@
 function dSigmadxi = func_dSigmadxi_logn(t,x,dxdxi,xi,n_dim,varargin)
-% This function maps means and variances to \Sigma of a log-normal
-% distribution
+% This function maps the means and covariances of the 
+% observables for a  subpopulation to \f$\boldsymbol{\Sigma}\f$ of the 
+% multivariate log-normal distribution.
 %
 % USAGE:
-% dSigmadxi = func_dSigmadxi_logn(t,x,dxdxi,xi,n_n_dim)
-% dSigmadxi = func_dSigmadxi_logn(t,x,dxdxi,xi,n_n_dim,noise,dnoisedxi,'multiplicative')
+% dSigmadxi = func_dSigmadxi_logn(t,x,dxdxi,xi,n_n_dim)\n
+% dSigmadxi =
+% func_dSigmadxi_logn(t,x,dxdxi,xi,n_n_dim,noise,dnoisedxi,''multiplicative'')
+% \n
+% dSigmadxi = func_dSigmadxi_logn(t,x,dxdxi,xi,n_n_dim,noise,dnoisedxi,''additive'')
 
 % Parameters:
 % t: time vector
 % x: vector including means and variances
-% dxdxi: vector including derivatvies of means and variances
+% dxdxi: vector including deriatives of the means and 
+% variances of the observables for a subpopulation
 % xi: parameter vector
-% n_dim: numer of dimensions of multivariate log-normal distribution
+% n_dim: numer of dimensions of the multivariate log-normal distribution
 % varargin:
-%   noise:
-%   dnoisedxi:
-%   noisemodel:
-%       = ''multiplicative''
-%       = ''additive''
+%   * noise: parameters for the measurement noise
+%   * dnoisedxi: derivative parameters for the measurement noise
+%   * noisemodel: ''multiplicative'' or ''additive''
 %
 % Return values:
-% dSigmadxi: n_t x n_xi x n_dim x n_dim
+% dSigmadxi: (n_t x n_xi x n_dim x n_dim) derivative of 
+% \f$\boldsymbol{\Sigma}\f$ of the multivariate log-normal distribution
 
 
 noise = zeros(size(x,2),1);

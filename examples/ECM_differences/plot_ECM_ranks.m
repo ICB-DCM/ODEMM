@@ -7,7 +7,7 @@ clc
 load_plot_settings
 
 load('./project/data/data_matrices_1D2D');
-load ./project/results/results_4_1802
+load ./project/results/results_ECM_differences
 
 n_data = 0;
 for e = 1:8

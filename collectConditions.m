@@ -1,6 +1,6 @@
 function [conditions,D] = collectConditions(D,M)
 % This function collects all different conditions regarding input/differences
-%   between subpopulations/experiments and timepoints
+%   between subpopulations/experiments and timepoints.
 %
 % USAGE:
 % [conditions,D] = collectConditions(D,M)
@@ -13,14 +13,13 @@ function [conditions,D] = collectConditions(D,M)
 %   conditions: conditions struct
 %   D: updated data struct
 %
-%
 % Required fields of D:
 %    t: time vector
 %    u: vector of stimulations
 %
 % Required fields of M:
 %    n_subpop: number of subpopulations
-%    u{s,e}: input vector describing differences between subpopulations
+%    u{s,e}: input vector capturing differences between subpopulations
 %               and experiments
 %
 % Generated fields of D:
@@ -28,10 +27,9 @@ function [conditions,D] = collectConditions(D,M)
 %           data
 %
 % Generated fields of conditions: 
-%          input: (n_u + n_differences) x 1 input vector
-%          time: 1 x n_t time vector
-%          sigma: 1 x n_t vector of sigmas for condition c
-
+%      input: (n_u + n_differences) x 1 input vector
+%      time: 1 x n_t time vector
+%      sigma: 1 x n_t vector of sigmas for condition c
 
 
 conditions(1).input = [D(1).u(:,1);M.u{1,1}];

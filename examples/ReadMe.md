@@ -11,5 +11,4 @@ The following examples are included:
 These models require the freely available toolboxes 
 * AMICI for simulation (http://icb-dcm.github.io/AMICI/) 
 * PESTO for the parameter estimation (http://icb-dcm.github.io/PESTO/)
-
 * SPToolbox for the sigma-point approximation (http://icb-dcm.github.io/SPToolbox/)

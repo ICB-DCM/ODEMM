@@ -1,5 +1,6 @@
 function y = logofmvnpdf(X, Mu, Sigma)
-% Modified version of MATLAB function MVNPDF
+% Modified version of MATLAB function MVNPDF such that the log-density is
+% returned.
 % 
 % MVNPDF Multivariate normal probability density function (pdf).
 %   Y = MVNPDF(X) returns the probability density of the multivariate normal
@@ -38,7 +39,6 @@ function y = logofmvnpdf(X, Mu, Sigma)
 %      surf(X1,X2,reshape(p,25,25));
 %
 %   See also MVTPDF, MVNCDF, MVNRND, NORMPDF.
-
 %   Copyright 1993-2011 The MathWorks, Inc.
 
 

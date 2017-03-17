@@ -1,9 +1,12 @@
 function Sigma = func_Sigma_logn(t,x,xi,n_dim,varargin)
-% This function maps means and variances to \Sigma of a log-normal
-% distribution
+% This function maps the means and covariances to \f$\Sigma\f$ of a
+% (multivariate) log-normal distribution.
 %
 % USAGE:
-% Sigma = func_Sigma_logn(t,x,xi,n_dim,noise,noisemodel)
+% Sigma = func_Sigma_logn(t,x,xi,n_dim)\n
+% Sigma = func_Sigma_logn(t,x,xi,n_dim,noise,''additive'')\n
+% Sigma = func_Sigma_logn(t,x,xi,n_dim,noise,''multiplicative'')
+
 %
 % Parameters:
 % t: time vector
@@ -11,11 +14,12 @@ function Sigma = func_Sigma_logn(t,x,xi,n_dim,varargin)
 % xi: (not used, included for consistency and possible extensions)
 % n_dim: dimension of measurement
 % varargin: 
-%   noise:
-%   noisemodel:
+%  * noise: parameters for the measurement noise
+%  * noisemodel: ''multiplicative'' or ''additive''
 %
 % Return values:
-% Sigma: n_t x n_dim x n_dim 
+% Sigma: (n_t x n_dim x n_dim) \f$\boldsymbol{\Sigma}\f$ of the 
+% multivariate log-normal distribution
 
 
 % Assign Inputs

@@ -1,35 +1,39 @@
 function dsigma2dxi = func_dsigma2dxi_logn(t,x,dxdxi,xi,varargin)
-% This function calcuatates the derivative of sigma^2 in case of univariate
-% measurements and a log-normal distribution assumption
+% This function calcuatates the derivative of \f$\sigma^2\f$ in case of univariate
+% measurements and a log-normal distribution assumption.
 % 
 % USAGE: 
-% dsigma2dxi = func_dsigma2dxi_logn(t,x,dxdxi,xi)
-% dsigma2dxi = func_dsigma2dxi_logn(t,x,dxdxi,xi,noise,dnoisedxi,noise_model)
+% dsigma2dxi = func_dsigma2dxi_logn(t,x,dxdxi,xi)\n
+% dsigma2dxi =
+% func_dsigma2dxi_logn(t,x,dxdxi,xi,noise,dnoisedxi,''additive'') \n
+% dsigma2dxi =
+% func_dsigma2dxi_logn(t,x,dxdxi,xi,noise,dnoisedxi,''multiplicative'') \n
 %
 % Parameters:
 % t: time vector (not used, included for consistency and possible extensions)
-% x: vector of means and variances (not used, included for consistency and possible extensions)
-% dxdxi: derivatives of means and variances
+% x: vector of the means and variances (not used, included for consistency 
+% and possible extensions)
+% dxdxi: derivatives of the means and variances
 % xi: parameter vector(not used, included for consistency and possible extensions)
 % varargin:
-%   noise: parameter for measurement noise
-%   dnoisedxi: derivative of measurement noise
-%   noise_model: 
+%   * noise: parameters for measurement noise 
+%   * dnoisedxi: derivative of measurement noise
+%   * noisemodel: ''multiplicative'' or ''additive''
 %
 % Return values:
-% dsigma2dxi: derivative of sigma^2 of a log-normal distribution
+% dsigma2dxi: derivative of \f$\sigma^2\f$ of a log-normal distribution
 
-noise_model = 'multiplicative';
+noisemodel = 'multiplicative';
 if nargin >= 5
     noise = varargin{1};
     dnoisedxi = varargin{2};
 end
 if nargin >= 6
-    noise_model = varargin{3};
+    noisemodel = varargin{3};
 end
 
 if nargin >= 5
-    switch noise_model 
+    switch noisemodel 
         case 'multiplicative'
         dsigma2dxi = bsxfun(@plus,bsxfun(@times, 1./(x(:,2)./(x(:,1).^2)+1),...
         bsxfun(@rdivide, bsxfun(@times,(x(:,1).^2), permute(dxdxi(2,:,:),[3,2,1])) -...

@@ -7,10 +7,10 @@ function [] = printParams(parameters,varargin)
 % Parameters:
 % parameters: parameters struct
 % varargin:
-% xi: parameter values printed along with parameter name
+% xi: parameter values printed together with parameter names
 %
 % Required fields of parameters:
-% name = {'name1',...} names of parameters
+% name: struct with names of parameters
 %
 if nargin >= 2
     xi = varargin{1};

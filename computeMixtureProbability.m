@@ -1,18 +1,17 @@
 function varargout = computeMixtureProbability(varargin)
-% Robust calculation of a mixture distribution likelihood
+% Robust calculation of a mixture distribution likelihood.
 %
 % USAGE:
 %   [logp,dlogpdxi] = computeMixtureProbability(w,q_i,H_i) \n
-%   [logp]          = computeMixtureProbability(w,q_i) \n
+%   [logp]          = computeMixtureProbability(w,q_i) 
 %
 % Parameters:
 % varargin:
-% w: (1 x n_s) vector with weights
+% w: (1 x n_s) vector with weights \f$w_s\f$
 % q_i:  (n x n_s) matrix with log(p_i) for every column
 % H_i:  (n x n_xi x n_s) s.th. d(w_i*p_i)/dxi = p_i*H_i
 %
 % Return values:
-% varargout:
 % logp: 1x1 scalar of loglikelihood
 % dlogpdxi: n_xi x 1 vector of gradient
 

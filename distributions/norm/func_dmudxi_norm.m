@@ -1,5 +1,6 @@
 function dmudxi = func_dmudxi_norm(t,x,dxdxi,Sigma,dSigmadxi,xi,u,n_dim)
-% This function calculates the derivative of mu of a normal distribution
+% This function calculates the derivative of \f$\boldsymbol{\mu}\f$ of the
+% (multivariate) normal distribution.
 %
 % Parameters:
 % t: time vector (not used, included for consistency and possible extensions)
@@ -12,8 +13,8 @@ function dmudxi = func_dmudxi_norm(t,x,dxdxi,Sigma,dSigmadxi,xi,u,n_dim)
 % n_dim: dimension of measurement
 %
 % Return values:
-% dmudxi: derivative of mu of a normal distribution
-
+% dmudxi: derivative of \f$\boldsymbol{\mu}\f$ of the (multivariate) 
+% normal distribution.
 
 dmudxi=zeros(numel(t),numel(xi),n_dim);
 for k = 1:n_dim

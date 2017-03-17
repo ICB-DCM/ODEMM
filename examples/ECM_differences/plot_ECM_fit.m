@@ -2,7 +2,7 @@ close all
 
 load('./project/data/data_matrices_1D2D');
 
-load ./project/results/results_4_1802
+load ./project/results/results_ECM_differences
 
 p = parameters{15};
 clear parameters;

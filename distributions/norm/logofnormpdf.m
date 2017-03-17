@@ -1,6 +1,6 @@
 function logy = logofnormpdf(x,mu,sigma)
 % Modified version of MATLAB function NORMPDF such that the log-density is
-% given back 
+% given back. 
 %
 % NORMPDF Normal probability density function (pdf).
 %   Y = NORMPDF(X,MU,SIGMA) returns the pdf of the normal distribution with

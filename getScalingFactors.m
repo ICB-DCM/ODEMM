@@ -1,30 +1,30 @@
 function s = getScalingFactors(varargin)
-% Calculates scaling factors for replicates such that the log of the means
-% are as similar as possible
+% Calculates scaling factors for replicates such that the distance between
+% the means in log-space are minimal.
 %
 % USAGE:
-% s = getScalingFactors(ExpC_1, ExpC_2)
+% s = getScalingFactors(ExpC)\n
+% s = getScalingFactors(ExpC_1,ExpC_2)
 %
 % Parameters: 
 % varargin:
-% ExpC
+% ExpC: struct of experiments
 %
-% Required fields of ExpC
+% Required fields of ExpC:
 %   name: string specifying the conditions
-%   .time: time point of measurement
-%   .stimulus: stimulus for measurement
-%   .replicate(j)
-%      .name ... 'string specifying the replicate/replicate'
-%      .measurands ... {'name of measurand 1','name of measurand 2',
-%                            ...,'name of measurand m'}
-%      .data .... {n_D1 x m matrix under condition 1, n_D2 x m matrix under
-%          condition 2,...,n_Dnc x m matrix under condition n_c}
-%         (One row represents one observed cell with the
+%   time: time point of measurement
+%   stimulus: stimulus for measurement
+%   replicate: struct of replicates
+%   * name: string specifying the replicate
+%   * measurands: names of measurands
+%   * ndata: matrices under different conditions
+%         (one row represents one observed cell with the
 %          data in the order of the measurands. The different
-%          rows provide measurement data for different cells.)
+%          rows provide measurement data for different cells)
 %
 % Return values:
-% s: 1 x n_r vector including scaling factor for every replicate
+% s: (1 x n_r) vector including scaling factor for every replicate
+
 
 %%  extract the different time and stimulus conditions (u_t) and the total number of replicate n_rtot
 n_rtot = 0;

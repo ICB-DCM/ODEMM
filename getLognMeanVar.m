@@ -1,22 +1,22 @@
 function [Zout,varargout] = getLognMeanVar(Z,n_dim,varargin)
 % This function calculations the mean and variances, and the corresponding derivatives
-% of a multivariate log-normal distribution given the parameters \mu and \Sigma
+% of a multivariate log-normal distribution given the parameters 
+% \f$\boldsymbol{\mu}\f$ and \f$\boldsymbol{\Sigma}\f$.
 %
 % USAGE:
-% [Zout] = getLognMeanVar(Z,n_dim)
+% [Zout] = getLognMeanVar(Z,n_dim) \n
 % [Zout,dZdthetaout] = getLognMeanVar(Z,n_dim,dZdtheta)
 %
 % Parameters:
-% Z: (n_dim + n_dim(n_dim+1)/2) x n_t vector with \mu and \Sigma
+% Z: (n_dim + n_dim(n_dim+1)/2) x n_t vector with \f$\boldsymbol{\mu}\f$ 
+% and  \f$\boldsymbol{\Sigma}\f$
 % n_dim: dimension of the multivariate log-normal distribution
 % varargin:
-% dZdtheta: (n_dim + n_dim(n_dim+1)/2) x n_theta x n_t
+% dZdtheta: ((n_dim + n_dim(n_dim+1)/2) x n_theta x n_t derivative)
 %
 % Return values:
-% Zout: (n_dim + n_dim(n_dim+1)/2) x n_t vector with mean and Variance
-% varargout:
-% dZdthetaout:
-
+% Zout: (n_dim + n_dim(n_dim+1)/2) x n_t vector with mean and coariance
+% dZdthetaout: derivative of Zout
 
 n_t = size(Z,1);
 if nargin >=3
