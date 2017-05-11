@@ -21,15 +21,15 @@ function dsigma2dxi = func_dsigma2dxi_norm(t,x,dxdxi,xi,varargin)
 % dsigma2dxi: derivative of \f$\sigma^2\f$ of the normal distribution.
 
 noisemodel = 'additive';
-if nargin >= 4
+if nargin > 4
     noise = varargin{1};
     dnoisedxi = varargin{2};
 end
-if nargin >= 5
+if nargin > 5
     noisemodel = varargin{3};
 end
 
-if nargin >= 5 
+if nargin > 5 
     switch noisemodel 
         case 'additive'
         dsigma2dxi = bsxfun(@plus,permute(dxdxi(2,:,:),[3,2,1]),dnoisedxi);           

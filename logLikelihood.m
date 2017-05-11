@@ -84,10 +84,10 @@ options.replicates = false;
 options.negLogLikelihood = false;
 options.simulate_musigma = false;
 %% Input assignment
-if nargin >= 5
+if nargin >= 4
     options = setdefault(varargin{1},options);
 end
-if nargin >= 4
+if nargin >= 5
     conditions = varargin{2};
 end
 if nargin >= 6
