@@ -83,16 +83,17 @@ eval(['ODEMM_' M.name]);
 options.MS.fmincon = optimset('GradObj','on','display','iter','TolFun',1e-10,...
     'TolX',1e-10, 'MaxIter', 1000,'algorithm','interior-point');
 options.MS.n_starts = 100;
-options.MS.comp_type = 'sequential'; options_MS.mode = 'visual';
+options.MS.comp_type = 'sequential'; options.MS.mode = 'visual';
 parameters.guess =   getParameterGuesses(parameters,@(xi)  logLikelihood([xi],M,D,options,conditions),options.MS.n_starts,parameters.min,parameters.max);
 parameters = getMultiStarts(parameters,@(xi) logLikelihood([xi],M,D,options,conditions),options.MS);
 
-%% Profile likleihood calculation
-options.PL.fmincon = optimset('GradObj','on','display','off','MaxIter',100,...
-    'algorithm','trust-region-reflective');
+%% Profile likelihood calculation
+%options.PL.fmincon = optimset('GradObj','on','display','off','MaxIter',200,...
+ %   'algorithm','trust-region-reflective');
+options.PL = PestoOptions();
+options.PL.localOptimizer = 'fmincon';
+options.PL.localOptimizerOptions =  optimset('GradObj','on','display','iter-detailed','MaxIter',200,...
+    'algorithm','interior-point');
 options.PL.parameter_index = 1:parameters.number;
-options.PL.P.min = max(-6,parameters.min);
-options.PL.P.max = min( 6,parameters.max);
-options.PL.P_next_step.min = 1e-3;
 parameters = getParameterProfiles(parameters,@(xi) logLikelihood(xi,M,D,options,conditions),options.PL);
 save('./project/results/results_diffgeneexp_2D','M','D','options','parameters','conditions')

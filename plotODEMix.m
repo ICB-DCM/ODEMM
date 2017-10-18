@@ -126,6 +126,14 @@ if ~iscell(options.data.col)
     end
 end
 
+if ~iscell(options.data.col)
+    temp = options.data.col;
+    options.data = rmfield(options.data, 'col');
+    for e = I
+        options.data.col{e} = temp;
+    end
+end
+
 if ~iscell(options.data.fill_col)
     temp = options.data.fill_col;
     options.data = rmfield(options.data, 'fill_col');
@@ -134,11 +142,13 @@ if ~iscell(options.data.fill_col)
     end
 end
 
-if ~iscell(options.model.colormap)
-    temp = options.model.colormap;
-    options.model = rmfield(options.model, 'colormap');
+if ~iscell(options.model.levelsets)
+    temp = options.model.levelsets;
+    options.model = rmfield(options.model, 'levelsets');
     for e = I
-        options.model.colormap{e} = temp;
+        for d = 1:max(numel(D(e).u),numel(D(e).t));
+            options.model.levelsets{e,d} = temp;
+        end
     end
 end
 
@@ -208,6 +218,7 @@ for e = I
                             if options.data.kde
                                 for i = 1:2
                                     subplot(2,numel(tu_ind{e}),c);
+                                    
                                     if i == 1
                                         c = c+numel(tu_ind{e});
                                     else
@@ -271,12 +282,13 @@ for e = I
                             set(gca,'ytick','','XMinorTick','off');
                         end
                         
-                        set(gca,'ticklength',2*get(gca,'ticklength'))
+                        %set(gca,'ticklength',2*get(gca,'ticklength'))
                         box off
                         if options.subplot_lin
                             view(90,-90);
                         end
                     end
+                    title(['time ' num2str(D(e).t(tu_ind{e}(k)))]);
                 end
             case 'more dose one tp'
                 if inds(ind) > 0
@@ -361,13 +373,16 @@ for e = I
                             view(90,-90);
                         end
                     end
+                    if ~options.plainstyle
+                        title(['dose ' num2str(D(e).u(tu_ind{e}(d)))]);
+                    end
                 end
             otherwise
                 error('Plotcase not clear!')
         end
     end
 end
-if ~options.hold_on
+if nargout >= 1
     varargout{1} = fh;
     if nargout >= 2
         varargout{2} = fhm;
@@ -636,8 +651,8 @@ if (~options.replicates && ~isempty(D(e).y) && plotData) || ...
         if D(e).n_dim==1 || ind > 0
             switch options.data.plot
                 case 'filled'
-                    legendhandles.data = fill(y_hist(round(0.5:0.5:length(y_hist))),[0;h(round(0.5:0.5:length(h)));0],options.data.fill_col{e}); hold on;
-                    legendhandles.data.EdgeColor = options.data.fill_col{e};
+                    legendhandles.data = fill(y_hist(round(0.5:0.5:length(y_hist))),[0;h(round(0.5:0.5:length(h)));0],options.data.col{e}); hold on;
+                    legendhandles.data.EdgeColor = options.data.col{e};
                 case 'empty'
                     legendhandles.data = plot(y_hist(round(0.5:0.5:length(y_hist))),[0;h(round(0.5:0.5:length(h)));0],...
                         '-','color',options.data.col{e},'linewidth',options.data.lw); hold on;
@@ -645,7 +660,7 @@ if (~options.replicates && ~isempty(D(e).y) && plotData) || ...
         else
             hs=scatter(log10(y(:,1)),log10(y(:,2)),options.data.markersize,'.'); hold on;
             set(hs,'MarkerEdgeColor',options.data.col{e});
-            set(hs,'MarkerEdgeAlpha',0.1);
+            set(hs,'MarkerEdgeAlpha',0.5);
             [~,kdensity,X1,X2]=kde2d(log10(y));
             contour(X1,X2,kdensity,options.model.levelsets{e,d},'color',options.model.col{e},...
                 'LineWidth',options.model.level_linewidth); hold on;
@@ -747,8 +762,8 @@ else
         set(gca,'ydir','reverse');
     end
     if ~options.plainstyle
-        ylabel(D(e).measurand{1});
-        xlabel(D(e).measurand{2});
+        xlabel(D(e).measurand{1});
+        ylabel(D(e).measurand{2});
         
         if ~options.data.kde & legendflag
             legend('data','model')
@@ -763,7 +778,7 @@ end
 if ~isempty(options.ytick{e})
     set(gca,'ytick',options.ytick{e})
 end
-if plotModel || D(e).n_dim == 1
+if plotModel || D(e).n_dim == 1 || ind > 0
     set(gca,'xscale',options.x_scale);
 end
 

@@ -150,7 +150,7 @@ set(gca,'xscale','lin',...
     'tickdir','out',...
     'yticklabel',{},'fontsize',fs);
 box off
-set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 8.5 2.2])
+set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 8.35 2.2])
 print('-depsc','./project/figures/CI_manuscript');
 
 %% Uncertainty Figure Supplement

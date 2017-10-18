@@ -21,7 +21,7 @@ q_i = varargin{2};
 n_s = length(w); % number of subpopulations
 n = size(q_i,1); % number of data points
 
-if abs((sum(w)-1)>1e-15) || ~all(w>=0)
+if abs((sum(w)-1)>1e-13) || ~all(w>=0)
     error('Weights need to be positive and sum up to 1!')
 end
 

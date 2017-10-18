@@ -86,9 +86,11 @@ parameters = getMultiStarts(parameters,@(xi) logLikelihood([xi],M,D,options,cond
 parameters.MS.BIC = -2*parameters.MS.logPost+ log(numel(D(1).t)*1000)*parameters.number;
 %% Profile likelihood calculation
 options.PL.fmincon = optimset('GradObj','on','display','off','MaxIter',100,'algorithm','trust-region-reflective');
-options.PL.parameter_index = 5:6;
+options.PL.parameter_index = 1:parameters.number;
 options.PL.P.min = max(-6,parameters.min);
 options.PL.P.max = min( 6,parameters.max);
 options.PL.P_next_step.min = 1e-3;
+timestart = tic
 parameters = getParameterProfiles(parameters,@(xi) logLikelihood(xi,M,D,options,conditions),options.PL);
-save('./project/results/results_SP_k3','M','D','parameters','conditions','options')
+parameters.profile_cpu = toc(timestart);
+save('./project/results/results_SP_k3_profiles','M','D','parameters','conditions','options')

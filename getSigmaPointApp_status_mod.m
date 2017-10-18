@@ -60,6 +60,7 @@ end
 %% Sigma points
 % Matrix root: D = S*S'
 if compute_derivative == 0
+    D = D+diag(size(D,1))*1e-8;
     [S] = chol(D,'lower');
 else
     [S,dSddelta] = chol_w_diff(D,dDddelta);
