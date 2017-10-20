@@ -6,3 +6,7 @@ Biopaper/*
 /examples/conversion_reaction/project/results/cr_scalingstudy*
 /examples/conversion_reaction/project/run_thermIntegration*
 *.mexmaci64
+/examples/conversion_reaction/project/data/conversionprocess_data_*
+examples/conversion_reaction/SabineCode/
+/figure/*
+
