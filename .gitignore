@@ -1,3 +1,8 @@
 old/
 *.csv
 Biopaper/*
+/examples/subpopulation_differences/ODEMM*
+/examples/subpopulation_differences/ODEMM*
+/examples/conversion_reaction/project/results/cr_scalingstudy*
+/examples/conversion_reaction/project/run_thermIntegration*
+*.mexmaci64
