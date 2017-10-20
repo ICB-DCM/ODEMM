@@ -8,5 +8,6 @@ Biopaper/*
 *.mexmaci64
 /examples/conversion_reaction/project/data/conversionprocess_data_*
 examples/conversion_reaction/SabineCode/
-/figure/*
-
+/figures/*
+examples/ECM_differences/collect_ECM_combresults_conv.m
+examples/conversion_reaction/project/data/sctraj*
