@@ -11,3 +11,7 @@ examples/conversion_reaction/SabineCode/
 /figures/*
 examples/ECM_differences/collect_ECM_combresults_conv.m
 examples/conversion_reaction/project/data/sctraj*
+getSigmaPointApp_status_mod_server.m
+rm_anova2/
+examples/subpopulation_differences/make_table.m
+examples/conversion_reaction/project/results/results_randstart*
