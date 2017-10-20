@@ -76,7 +76,7 @@ function varargout = logLikelihood(xi,M,D,varargin)
 %    replicates: true if replicates are fitted individually
 
 %% Set default options
-global timeval timesim
+%global timeval timesim
 
 options.use_robust = true;
 options.replicates = false;
@@ -84,6 +84,8 @@ options.negLogLikelihood = false;
 options.simulate_musigma = false;
 options.prior.flag = false;
 options.tau = 1;
+options.replicate_weighting = false;
+
 %% Input assignment
 if nargin >= 4
     options = setdefault(varargin{1},options);
@@ -394,7 +396,11 @@ for e = I % Loop: Experimental conditions
                         dlogL = dlogL + sum(bsxfun(@times,1./p,dpdxi))';
                     end
                 end
-                logL = logL + sum(logp);
+                if options.replicate_weighting
+                    logL + sum(logp).*D(e).replicate(r).weighting(k,d);
+                else
+                    logL = logL + sum(logp);
+                end
             end % time loop
         end % replicates
     end % dose loop
