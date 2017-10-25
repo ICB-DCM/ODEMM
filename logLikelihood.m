@@ -127,16 +127,16 @@ for c = 1:length(conditions)
             dXdtheta_c{c} = permute(dXdtheta_c{c},[2,3,1]);
             %timesim = timesim + cputime - tempsim;
         catch
-           % timesim = timesim + cputime - tempsim;
+            % timesim = timesim + cputime - tempsim;
             disp('simulation failed')
             status = -1;
         end
     else
         try
             [status,~,~,X_c{c}] = M.model(conditions(c).time,M.theta(xi,conditions(c).input),conditions(c).input);
-           % timesim = timesim + cputime - tempsim;
+            % timesim = timesim + cputime - tempsim;
         catch
-           % timesim = timesim + cputime - tempsim;
+            % timesim = timesim + cputime - tempsim;
             disp('simulation failed')
             status = -1;
         end
@@ -160,7 +160,7 @@ end
 %% Evaluation of likelihood function
 logL = 0;
 dlogL = zeros(length(xi),1);
-try
+%try
 for e = I % Loop: Experimental conditions
     for d = 1:size(D(e).u,2)
         for r = replicates{e}
@@ -386,7 +386,14 @@ for e = I % Loop: Experimental conditions
                 if options.use_robust
                     if nargout >= 2
                         [logp,dlogpdxi]= computeMixtureProbability(w_s,q,H) ;
-                        dlogL = dlogL + sum(dlogpdxi)';
+                        if options.replicates && options.individual_weighting
+                            dlogL = dlogL + sum(dlogpdxi)'*D(e).replicate(r).weighting(d,k);
+                        elseif ~options.replicates && options.individual_weighting
+                            dlogL = dlogL + sum(dlogpdxi)'*D(e).weighting(d,k);
+                        else
+                            dlogL = dlogL + sum(dlogpdxi)';
+                            
+                        end
                     elseif nargout <= 1
                         logp = computeMixtureProbability(w_s,q) ;
                     end
@@ -460,7 +467,7 @@ if options.prior.flag
                 dlogL = nansum([dlogL,-(xi-options.prior.mean)./options.prior.sigma2],2);
             end
         case 'uniform'
-            logL = options.tau*logL - nansum(log((options.prior.max-options.prior.min).*(xi>=options.prior.min & xi<=options.prior.max))); 
+            logL = options.tau*logL - nansum(log((options.prior.max-options.prior.min).*(xi>=options.prior.min & xi<=options.prior.max)));
     end
 end
 
@@ -469,10 +476,10 @@ if nargout >= 2
     dJdxi = dlogL;
 end
 % end
-catch
-   varargout{1} =  -Inf;
-   return;
-end
+%catch
+% varargout{1} =  -Inf;
+% return;
+%end
 %% Output assignment
 if ~isfinite(J)
     varargout{1} =  -Inf;
