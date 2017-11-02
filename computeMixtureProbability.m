@@ -12,8 +12,8 @@ function varargout = computeMixtureProbability(varargin)
 % H_i:  (n x n_xi x n_s) s.th. d(w_i*p_i)/dxi = p_i*H_i
 %
 % Return values:
-% logp: 1x1 scalar of loglikelihood
-% dlogpdxi: n_xi x 1 vector of gradient
+% logp: n x 1 scalar of loglikelihood
+% dlogpdxi: n x n_xi vector of gradient
 
 %% Input assignment and initialization
 w = varargin{1};
@@ -21,7 +21,7 @@ q_i = varargin{2};
 n_s = length(w); % number of subpopulations
 n = size(q_i,1); % number of data points
 
-if abs((sum(w)-1)>1e-15) || ~all(w>=0)
+if abs((sum(w)-1)>1e-13) || ~all(w>=0)
     error('Weights need to be positive and sum up to 1!')
 end
 
@@ -29,6 +29,17 @@ if nargout == 2
     H_i =  varargin{3};
     n_xi = size(H_i,2); % number of parameters
     Hmax = zeros(n,n_xi);    
+end
+
+%% Handling of subpopulations of size zero
+ind_w = find(w > 0);
+if length(ind_w) < n_s
+    w = w(ind_w);
+    q_i = q_i(:,ind_w);
+    n_s = length(w); % number of non-zero subpopulations
+    if nargout == 2
+        H_i =  H_i(:,:,ind_w);
+    end
 end
 
 %% Calculate q = log(p) and gradient dlog(p)/dxi
