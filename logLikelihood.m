@@ -219,7 +219,18 @@ for e = I % Loop: Experimental conditions
                             elseif D(e).n_dim == 1
                                 dcovscaledxi = 2*(dsdxi_temp(1,:)*sc(1));
                             else
-                                error('to do allgemeines n')
+                                n = 1;
+                                for iDim1 = 1:D(e).n_dim
+                                    for iDim2 = iDim1:D(e).n_dim
+                                        if iDim1 == iDim2
+                                            dcovscaledxi(n) = 2*(dsdxi_temp(iDim1,:)*sc(iDim1));
+                                        else
+                                            dcovscaledxi(n) = dsdxi_temp(iDim1,:)*sc(iDim2)+...
+                                                dsdxi_temp(iDim2,:)*sc(iDim1);
+                                        end
+                                        n=n+1;
+                                    end
+                                end
                             end
                             for n = 1:(D(e).n_dim*(D(e).n_dim+1))/2
                                 dXdxi{s}(D(e).n_dim+n,:,k) = Z(k,D(e).n_dim+n)*(dcovscaledxi(n,:))+...
