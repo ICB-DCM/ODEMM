@@ -15,7 +15,7 @@ for d = 1:numel(D(5).u)
         
         TP2 = squeeze(D(6).replicate{r}(d,1,:,:));
         T2 = TP2(:,1);
-        
+                
         Ts1(r,d) = nanmean(T1);
         Ts2(r,d) = nanmean(T2);
     end
@@ -23,6 +23,7 @@ for d = 1:numel(D(5).u)
     
 end
 [signif_all,pv_all] = ttest2(Ts1(:),Ts2(:),'VarType','Unequal');
+[signif_all2,pv_all2] = ttest(Ts1(:)-Ts2(:));
 
 % plot TrkA differences
 figure(1)
@@ -56,6 +57,7 @@ for d = 1:numel(D(5).u)
     
 end
 [signif_all,pv_all] = ttest2(Es1(:),Es2(:),'Vartype','Unequal');
+[signif_all2,pv_all2] = ttest(Es1(:)-Es2(:));
 
 % plot Erk differences
 figure(2)

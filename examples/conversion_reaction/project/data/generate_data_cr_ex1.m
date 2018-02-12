@@ -4,7 +4,7 @@ close all
 clear all
 clc
 
-n_data = 1e3;
+n_data = 1e2;
 %% Data generation
 t = [0,0.1,0.5,1,2]; %hours
 xi_true = [-0.1,0.1,-0.45,-0.2,-1,-1.8,0.7];

@@ -55,7 +55,7 @@ function varargout = logLikelihood(xi,M,D,varargin)
 %   doffsetdxi{r,e}: gradient of offset
 %
 % Required fields of D:
-%   n_dim: dimension of the measurements 
+%   n_dim: dimension of the measurements
 %   t: 1 x n_t vector of timepoints
 %   u: n_maxu x n_u vector of inputs with n_maxu: maximal number
 %                       of inputs simulatenously used
@@ -66,7 +66,7 @@ function varargout = logLikelihood(xi,M,D,varargin)
 %   replicate(r).y:  n_u x n_t x n_cells x n_dim data matrix of replicate r in
 %                           experiment e (only needed if individual replicates should be
 %                       fitted)
-%                  
+%
 % Optional fields of options:
 %    use_robust: robust calculation of mixture probability\n
 %            = true: uses reformulation (default)\n
@@ -76,13 +76,14 @@ function varargout = logLikelihood(xi,M,D,varargin)
 %    replicates: true if replicates are fitted individually
 
 %% Set default options
-global timeval timesim
-
 options.use_robust = true;
 options.replicates = false;
-%options.logPosterior = false;
 options.negLogLikelihood = false;
 options.simulate_musigma = false;
+options.prior.flag = false;
+options.tau = 1;
+options.individual_weighting = false;
+
 %% Input assignment
 if nargin >= 4
     options = setdefault(varargin{1},options);
@@ -117,23 +118,35 @@ if nargin < 5 || isempty(conditions)
 end
 
 for c = 1:length(conditions)
-    tempsim = cputime;                                    
+    if isinf(M.theta(xi,conditions(c).input)) > 0
+        if options.negLogLikelihood
+            varargout{1} =  Inf;
+            if nargout >=2
+                varargout{2} =  Inf;
+            end
+        else
+            varargout{1} =  -Inf;
+            if nargout >=2
+                varargout{2} =  -Inf;
+            end
+        end
+        return;
+    end
+end
+
+for c = 1:length(conditions)
     if nargout >=2
         try
             [status,~,~,X_c{c},~,dXdtheta_c{c}] = M.model(conditions(c).time,M.theta(xi,conditions(c).input),conditions(c).input);
             dXdtheta_c{c} = permute(dXdtheta_c{c},[2,3,1]);
-            timesim = timesim + cputime - tempsim;
         catch
-            timesim = timesim + cputime - tempsim;
             disp('simulation failed')
             status = -1;
         end
     else
         try
             [status,~,~,X_c{c}] = M.model(conditions(c).time,M.theta(xi,conditions(c).input),conditions(c).input);
-            timesim = timesim + cputime - tempsim;
         catch
-            timesim = timesim + cputime - tempsim;
             disp('simulation failed')
             status = -1;
         end
@@ -157,7 +170,7 @@ end
 %% Evaluation of likelihood function
 logL = 0;
 dlogL = zeros(length(xi),1);
-
+%try
 for e = I % Loop: Experimental conditions
     for d = 1:size(D(e).u,2)
         for r = replicates{e}
@@ -179,7 +192,8 @@ for e = I % Loop: Experimental conditions
                     end
                 end
                 % scaling and offset
-                X(:,1:D(e).n_dim) = bsxfun(@plus,bsxfun(@times,M.scaling{r,e}(xi,u_dse)',Z(:,1:D(e).n_dim)),...
+                X(:,1:D(e).n_dim) = bsxfun(@plus,bsxfun(@times,...
+                    M.scaling{r,e}(xi,u_dse)',Z(:,1:D(e).n_dim)),...
                     M.offset{r,e}(xi,u_dse)');
                 if ~isempty(M.var_ind{s,e})
                     s_temp= M.scaling{r,e}(xi,u_dse);
@@ -282,7 +296,6 @@ for e = I % Loop: Experimental conditions
                                             ((log(y)-mu{s}(k))/sigma{s}(k)*dmudxi{s}(k,:)+...
                                             (((log(y)-mu{s}(k))/sigma{s}(k)).^2-1)*dsigmadxi{s}(k,:)));
                                     end
-                                    timeval = timeval + cputime - temp;
                                 else % multivariate
                                     temp = cputime;
                                     q(:,s) = bsxfun(@minus,logofmvnpdf(log(y),mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1])),sum(log(y),2));
@@ -300,7 +313,6 @@ for e = I % Loop: Experimental conditions
                                                 + sum((bsxfun(@minus,mu{s}(k,:),log(y))*dSigmaIndxi).*bsxfun(@minus,mu{s}(k,:),log(y)),2)));
                                         end
                                     end
-                                    timeval = timeval + cputime - temp;
                                 end
                             case 'norm'
                                 if D(e).n_dim == 1
@@ -394,7 +406,14 @@ for e = I % Loop: Experimental conditions
                 if options.use_robust
                     if nargout >= 2
                         [logp,dlogpdxi]= computeMixtureProbability(w_s,q,H) ;
-                        dlogL = dlogL + sum(dlogpdxi)';
+                        if options.replicates && options.individual_weighting
+                            dlogL = dlogL + sum(dlogpdxi)'*D(e).replicate(r).weighting(d,k);
+                        elseif ~options.replicates && options.individual_weighting
+                            dlogL = dlogL + sum(dlogpdxi)'*D(e).weighting(d,k);
+                        else
+                            dlogL = dlogL + sum(dlogpdxi)';
+                            
+                        end
                     elseif nargout <= 1
                         logp = computeMixtureProbability(w_s,q) ;
                     end
@@ -404,63 +423,43 @@ for e = I % Loop: Experimental conditions
                         dlogL = dlogL + sum(bsxfun(@times,1./p,dpdxi))';
                     end
                 end
-                logL = logL + sum(logp);
+                if options.replicates && options.individual_weighting
+                    logL = logL + sum(logp).*D(e).replicate(r).weighting(d,k);
+                elseif ~options.replicates && options.individual_weighting
+                    logL = logL + sum(logp).*D(e).weighting(d,k);
+                else
+                    logL = logL + sum(logp);
+                end
             end % time loop
         end % replicates
     end % dose loop
 end % experiment
 
-% if options.L1_reg.flag
-%     logL = logL - options.L1_reg.lambda*...
-%         sum(abs(xi(options.L1_reg.indices)));
-%     if nargout >= 2
-%         add = zeros(numel(xi),1);
-%         add(options.L1_reg.indices) = options.L1_reg.lambda*sign(xi(options.L1_reg.indices));
-%         dlogL = dlogL - add;
-%     end
-% end
-% %% Evaluation of prior distribution
-% if options.logPosterior
-%     logPrior = 0;
-%     dlogPriordxi = zeros(numel(xi),1);
-%     for i = 1:numel(xi)
-%         if ~isfield(options.prior{i},'distribution')
-%             error(['Prior needs to be defined for parameter xi(' num2str(i) ').'])
-%         end
-%         switch options.prior{i}.distribution
-%             case 'laplace'
-%                 if ~isfield(options.prior{i},'distribution')
-%                     error(['Prior needs to be defined for parameter xi(' num2str(i) ').'])
-%                 end
-%                 z = options.prior{i}.z;
-%                 logPrior = logPrior - log(2*z) - abs(xi(i))/z;
-%                 if nargout >= 2
-%                     temp_grad = zeros(numel(xi),1);
-%                     temp_grad(i) = -sign(xi(i))/z;
-%                     if options.estimate_z
-%                         temp_grad = temp_grad + (-1/z + abs(xi(i))/z^2)*options.prior{i}.dzdxi(xi);
-%                     end
-%                     dlogPriordxi = dlogPriordxi + temp_grad;
-%                 end
-%             case 'uniform'
-%                 logPrior = logPrior - ...
-%                     log(options.prior{i}.max-options.prior{i}.min);
-%         end
-%     end
-%     J = logL + logPrior;
-%     if nargout >= 2
-%         dJdxi = dlogL + dlogPriordxi;
-%     end
-% else % J is likelihood function
+
+if options.prior.flag
+    switch options.prior.distribution
+        case 'normal'
+            logL = logL - 0.5*nansum(log(2*pi*options.prior.sigma2))-...
+                0.5*nansum((xi-options.prior.mean).^2./options.prior.sigma2);
+            if nargout >=2
+                dlogL = nansum([dlogL,-(xi-options.prior.mean)./options.prior.sigma2],2);
+            end
+        case 'uniform'
+            logL = options.tau*logL - ...
+                nansum(log((options.prior.max-options.prior.min).*(xi>=options.prior.min & ...
+                xi<=options.prior.max)));
+    end
+end
+
+
 J = logL;
 if nargout >= 2
     dJdxi = dlogL;
 end
-% end
 
 %% Output assignment
-if ~isreal(J)
-    error('Likelihood is not real!');
+if ~isfinite(J)
+    varargout{1} =  -Inf;
 else
     if options.negLogLikelihood
         varargout{1} =  -J;

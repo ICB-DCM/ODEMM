@@ -77,18 +77,30 @@ eval(['ODEMM_' M.name]);
 % [g,g_fd_f,g_fd_b,g_fd_c]
 
 %% Multi-start optimization
-options.MS.fmincon = optimset('GradObj','on','display','iter','TolFun',1e-10, 'TolX',1e-10, 'MaxIter', 1000,'algorithm','interior-point');
+options.MS = PestoOptions();
+options.MS.localOptimizer = 'fmincon';
+options.MS.localOptimizerOptions = optimset('GradObj','on','display','iter',...
+    'TolFun',1e-10, 'TolX',1e-10, 'MaxIter', 1000,'algorithm','interior-point');
 options.MS.n_starts = 50;
-options.MS.comp_type = 'sequential'; options.MS.mode = 'visual';
-parameters.guess =   getParameterGuesses(parameters,@(xi) logLikelihood(xi,M,D,options,conditions),...
+options.MS.comp_type = 'sequential'; 
+options.MS.mode = 'visual';
+
+parameters.guess =  getParameterGuesses(parameters,@(xi) ...
+    logLikelihood(xi,M,D,options,conditions),...
     options.MS.n_starts, parameters.min,parameters.max);
-parameters = getMultiStarts(parameters,@(xi) logLikelihood([xi],M,D,options,conditions),options.MS);
+
+parameters = getMultiStarts(parameters,@(xi) ...
+    logLikelihood([xi],M,D,options,conditions),options.MS);
+
 parameters.MS.BIC = -2*parameters.MS.logPost+ log(numel(D(1).t)*1000)*parameters.number;
 %% Profile likelihood calculation
-options.PL.fmincon = optimset('GradObj','on','display','off','MaxIter',100,'algorithm','trust-region-reflective');
-options.PL.parameter_index = 5:6;
-options.PL.P.min = max(-6,parameters.min);
-options.PL.P.max = min( 6,parameters.max);
-options.PL.P_next_step.min = 1e-3;
-parameters = getParameterProfiles(parameters,@(xi) logLikelihood(xi,M,D,options,conditions),options.PL);
-save('./project/results/results_SP_k3','M','D','parameters','conditions','options')
+options.profileReoptimizationOptions = optimset('GradObj','on',...
+    'display','off','MaxIter',100,...
+    'algorithm','trust-region-reflective');
+options.P.min = max(-6,parameters.min);
+options.P.max = min( 6,parameters.max);
+timestart = tic;
+parameters = getParameterProfiles(parameters,@(xi) ...
+    logLikelihood(xi,M,D,options,conditions),options.PL);
+parameters.profile_cpu = toc(timestart);
+save('./project/results/results_SP_k3_profiles','M','D','parameters','conditions','options')

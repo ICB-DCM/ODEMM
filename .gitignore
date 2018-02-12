@@ -1,0 +1,17 @@
+old/
+*.csv
+Biopaper/*
+/examples/subpopulation_differences/ODEMM*
+/examples/subpopulation_differences/ODEMM*
+/examples/conversion_reaction/project/results/cr_scalingstudy*
+/examples/conversion_reaction/project/run_thermIntegration*
+*.mexmaci64
+/examples/conversion_reaction/project/data/conversionprocess_data_*
+examples/conversion_reaction/SabineCode/
+/figures/*
+examples/ECM_differences/collect_ECM_combresults_conv.m
+examples/conversion_reaction/project/data/sctraj*
+getSigmaPointApp_status_mod_server.m
+rm_anova2/
+examples/subpopulation_differences/make_table.m
+examples/conversion_reaction/project/results/results_randstart*
