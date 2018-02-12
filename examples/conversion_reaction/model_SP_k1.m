@@ -59,11 +59,9 @@ M.sym.scaling{r,e} = sym('1');
 M.sym.offset{r,e} = sym('0');
 M.sym.sigma_noise{r,e} = [10.^(xi(6))];
 
-
 [conditions,D] = collectConditions(D,M);
 options.measurement_noise = true;
 options.noise_model = 'multiplicative';
-%options.path = './project/';
 generateODEMM(D,M,parameters,conditions,options)
 eval(['ODEMM_' M.name]);
 
@@ -72,7 +70,10 @@ xi = (parameters.max+parameters.min)/2;
 [g,g_fd_f,g_fd_b,g_fd_c] = testGradient(xi,@(xi) logLikelihood(xi,M,D,options,conditions),1e-4);
 [g,g_fd_f,g_fd_b,g_fd_c]
 
-options.MS.fmincon = optimset('GradObj','on','display','iter','TolFun',1e-10, 'TolX',1e-10, 'MaxIter', 1000,'algorithm','interior-point');
+options.MS = PestoOptions();
+options.MS.localOptimizer = 'fmincon';
+options.MS.localOptimizerOptions = optimset('GradObj','on','display','iter',...
+    'TolFun',1e-10, 'TolX',1e-10, 'MaxIter', 1000,'algorithm','interior-point');
 options.MS.n_starts = 50;
 options.MS.comp_type = 'sequential'; options.MS.mode = 'visual';
 parameters.guess =   getParameterGuesses(parameters,@(xi) logLikelihood(xi,M,D,options,conditions),...

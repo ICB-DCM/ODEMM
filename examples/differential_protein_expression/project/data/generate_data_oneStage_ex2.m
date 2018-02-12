@@ -25,13 +25,13 @@ D(1).name = 'differential protein expression';
 trajectories = nan(numel(t),n_data,2);
 for i = 1:w*n_data
     theta_s1([4,5]) = m_gamma+randn(1,2)*sigma_gamma;
-    sol = simulate_onestage_RRE(t,theta_s1,[]);
+    sol = simulate_onestage(t,theta_s1,[]);
     D(1).y(1,:,i,:) = exp(sol.y+randn(numel(t),2)*sigma_noise);
     trajectories(:,i,:) = exp(sol.y);
 end
 for i = w*n_data+1:n_data
     theta_s2([4,5]) = m_gamma+randn(1,2)*sigma_gamma;
-    sol = simulate_onestage_RRE(t,theta_s2,[]);    
+    sol = simulate_onestage(t,theta_s2,[]);    
     D(1).y(1,:,i,:) = exp(sol.y+randn(numel(t),2)*sigma_noise);
     trajectories(:,i,:) = exp(sol.y);
 end
@@ -41,19 +41,30 @@ end
 %test_onestage_SP(t,[theta_s2,2*log,u)
 
 %%
-options_plot.data.bins = 50;
-options_plot.x_scale = 'log';
-options_plot.marginals = 0;
-options_plot.simulate_musigma =1;
-options_plot.data.col{1} = [255,45,1]/255;%options_plot.data.col{2};
-options_plot.model.col{1} = 'k';
+load_plot_settings
 
-for d = 1:numel(D(1).t)
-    options_plot.model.levelsets{1,d} = 4;
+options_plot.x_scale = 'log';
+options_plot.data.plot = 'empty';
+options_plot.data.bins = 40;
+options_plot.model.points = 200;
+options_plot.model.level_linewidth = 0.5;
+options_plot.data.col{1} = color.data;
+options_plot.model.col{1} =  'k';
+options_plot.subplot_lin = 1;
+options_plot.legendflag = 0;
+options_plot.plainstyle = 1;
+options_plot.data.kde = 1;
+options_plot.marginals = 0;
+
+for d = 1:4
+options_plot.model.levelsets{1,d} = 3;
 end
 ODEMM_oneStage_SP
 plotODEMix(D,M,xi_true,[],options_plot)
+set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 10 4.5])
+feval('print', '-dpdf','-r1000','./project/figures/forabstract.pdf');
 
+%%
 save diffgeneexp_2D_data D
 
 D_ = D;

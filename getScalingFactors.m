@@ -6,7 +6,7 @@ function s = getScalingFactors(varargin)
 % s = getScalingFactors(ExpC)\n
 % s = getScalingFactors(ExpC_1,ExpC_2)
 %
-% Parameters: 
+% Parameters:
 % varargin:
 % ExpC: struct of experiments
 %
@@ -62,12 +62,38 @@ for e = 1:n_exp
     r_count = length(ExpC(j).replicate);
 end
 
-switch n_meas
-    case 2
-        J2 = @(s) nansum(nansum(bsxfun(@minus,(bsxfun(@plus,log(squeeze(M(:,1,:))),log(s)')),(nanmean(bsxfun(@plus,log(squeeze(M(:,1,:))),log(s)'),2))).^2))+...
-            nansum(nansum(bsxfun(@minus,(bsxfun(@plus,log(squeeze(M(:,2,:))),log(s)')),(nanmean(bsxfun(@plus,log(squeeze(M(:,2,:))),log(s)'),2))).^2));
-    case 1
-        J2 = @(s) nansum(nansum(bsxfun(@minus,(bsxfun(@plus,log(squeeze(M(:,1,:))),log(s)')),(nanmean(bsxfun(@plus,log(squeeze(M(:,1,:))),log(s)'),2))).^2));
+scale = 'log';
+
+switch scale
+    case 'log'
+        switch n_meas
+            case 2
+                J2 = @(s) nansum(nansum(bsxfun(@minus,(bsxfun(@plus,...
+                    log(squeeze(M(:,1,:))),log(s)')),...
+                    (nanmean(bsxfun(@plus,log(squeeze(M(:,1,:))),log(s)'),2))).^2))+...
+                    nansum(nansum(bsxfun(@minus,(bsxfun(@plus,...
+                    log(squeeze(M(:,2,:))),log(s)')),...
+                    (nanmean(bsxfun(@plus,log(squeeze(M(:,2,:))),log(s)'),2))).^2));
+            case 1
+                J2 = @(s) nansum(nansum(bsxfun(@minus,(bsxfun(@plus,...
+                    log(squeeze(M(:,1,:))),log(s)')),...
+                    (nanmean(bsxfun(@plus,log(squeeze(M(:,1,:))),log(s)'),2))).^2));
+        end
+    case 'lin'
+        switch n_meas
+            case 2
+                J2 = @(s) nansum(nansum(bsxfun(@minus,(bsxfun(@times,...
+                    (squeeze(M(:,1,:))),(s)')),...
+                    (nanmean(bsxfun(@times,(squeeze(M(:,1,:))),(s)'),2))).^2))+...
+                    nansum(nansum(bsxfun(@minus,(bsxfun(@times,...
+                    (squeeze(M(:,2,:))),(s)')),...
+                    (nanmean(bsxfun(@times,(squeeze(M(:,2,:))),(s)'),2))).^2));
+            case 1
+                J2 = @(s) nansum(nansum(bsxfun(@minus,(bsxfun(@times,...
+                    (squeeze(M(:,1,:))),(s)')),...
+                    (nanmean(bsxfun(@times,(squeeze(M(:,1,:))),(s)'),2))).^2));
+        end
 end
+
 s = fmincon(@(s) J2(s),ones(n_rtot,1),[],[],ones(1,n_rtot),n_rtot);
 

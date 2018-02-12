@@ -86,6 +86,7 @@ options.data.col  = 'b';
 options.data.fill_col = 0.7*[1,1,1];
 options.data.lw   = 2;
 options.data.bins = 100;
+options.data.edgealpha =0.5;
 % 2D
 options.data.marker = 'k.';
 options.data.markersize = 1.5;
@@ -660,7 +661,7 @@ if (~options.replicates && ~isempty(D(e).y) && plotData) || ...
         else
             hs=scatter(log10(y(:,1)),log10(y(:,2)),options.data.markersize,'.'); hold on;
             set(hs,'MarkerEdgeColor',options.data.col{e});
-            set(hs,'MarkerEdgeAlpha',0.5);
+            set(hs,'MarkerEdgeAlpha',options.data.edgealpha);
             [~,kdensity,X1,X2]=kde2d(log10(y));
             contour(X1,X2,kdensity,options.model.levelsets{e,d},'color',options.model.col{e},...
                 'LineWidth',options.model.level_linewidth); hold on;
@@ -706,7 +707,7 @@ if ~isempty(M) && plotModel
         end
         hs=scatter(y(:,1),y(:,2),options.data.markersize,'.'); hold on;
         set(hs,'MarkerEdgeColor',options.data.col{e});
-        set(hs,'MarkerEdgeAlpha',0.1);
+        set(hs,'MarkerEdgeAlpha',options.data.edgealpha);
         box on;
         contour(Y1,Y2,P,options.model.levelsets{e,d},'color',options.model.col{e},'LineWidth',options.model.level_linewidth); hold on;
     end
@@ -767,7 +768,7 @@ else
         
         if ~options.data.kde & legendflag
             legend('data','model')
-            colormap(options.model.colormap{e})
+            %colormap(options.model.colormap{e})
         end
         
     end

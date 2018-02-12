@@ -72,7 +72,10 @@ options.simulate_musigma = 1;
 % [g,g_fd_f,g_fd_b,g_fd_c]
 
 %% Multi-start optimization
-options.MS.fmincon = optimset('GradObj','on','display','iter','TolFun',1e-10, 'TolX',1e-10, 'MaxIter', 1000,'algorithm','interior-point');
+options.MS = PestoOptions();
+options.MS.localOptimizer = 'fmincon';
+options.MS.localOptimizerOptions = optimset('GradObj','on','display','iter',...
+    'TolFun',1e-10, 'TolX',1e-10, 'MaxIter', 1000,'algorithm','interior-point');
 options.MS.n_starts = 50;
 options.MS.comp_type = 'sequential'; options.MS.mode = 'visual';
 
