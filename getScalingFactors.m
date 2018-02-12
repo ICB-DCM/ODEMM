@@ -3,8 +3,8 @@ function s = getScalingFactors(varargin)
 % the means in log-space are minimal.
 %
 % USAGE:
-% s = getScalingFactors(ExpC)\n
-% s = getScalingFactors(ExpC_1,ExpC_2)
+% s = getScalingFactors('log',ExpC)\n
+% s = getScalingFactors('log',ExpC_1,ExpC_2)
 %
 % Parameters:
 % varargin:
@@ -28,10 +28,11 @@ function s = getScalingFactors(varargin)
 
 %%  extract the different time and stimulus conditions (u_t) and the total number of replicate n_rtot
 n_rtot = 0;
-n_exp = nargin;
+scale = varargin{1};
+n_exp = nargin-1;
 u_t = [];
 for e = 1:n_exp
-    ExpC = varargin{e};
+    ExpC = varargin{e+1};
     n_rtot = n_rtot + length(ExpC(1).replicate);
     for j = 1:length(ExpC)
         if isempty(u_t) || ~ismember([ExpC(j).stimulus,ExpC(j).time],u_t,'rows')
@@ -45,7 +46,7 @@ n_meas = length(ExpC(1).replicate(1).measurands);
 M = nan(n_diff,n_meas,n_rtot);
 r_count = 0;
 for e = 1:n_exp
-    ExpC = varargin{e};
+    ExpC = varargin{e+1};
     for j = 1:length(ExpC)
         [~,c] = ismember([ExpC(j).stimulus,ExpC(j).time],u_t,'rows');
         for r = 1:length(ExpC(j).replicate)
@@ -61,8 +62,6 @@ for e = 1:n_exp
     end
     r_count = length(ExpC(j).replicate);
 end
-
-scale = 'log';
 
 switch scale
     case 'log'

@@ -37,10 +37,8 @@ for i1 = 0:1
     end
    end 
 end
-% [0 0 0 1 1 0]
-% [0 0 0 1 0 0]
 
-for icomb = [  2     3     5     9    17    33]
+for icomb = [1:2^6]
 parameters.name = {'log_{10}(k_1)','log_{10}(k_2)','log_{10}(k_4)','log_{10}(k_5)',...
     'log_{10}(k_3TrkA_0)','log_{10}(s_{P1}Erk)',...
     'log_{10}(cvTrkA)','log_{10}(cvErk)','log_{10}(corr)'...

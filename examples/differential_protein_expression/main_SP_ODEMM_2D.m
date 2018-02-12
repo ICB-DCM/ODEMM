@@ -75,9 +75,10 @@ options.simulate_musigma = 1;
 generateODEMM(D,M,parameters,conditions,options)
 eval(['ODEMM_' M.name]);
 
-% xi = (parameters.max+parameters.min)/2;
-% [g,g_fd_f,g_fd_b,g_fd_c] = testGradient(xi,@(xi) logLikelihood(xi,M,D,options,conditions),1e-4);
-% [g,g_fd_f,g_fd_b,g_fd_c]
+% check gradient
+xi = (parameters.max+parameters.min)/2;
+[g,g_fd_f,g_fd_b,g_fd_c] = testGradient(xi,@(xi) logLikelihood(xi,M,D,options,conditions),1e-4);
+[g,g_fd_f,g_fd_b,g_fd_c]
 
 %% Multi-start optimization
 options.MS = PestoOptions();
@@ -86,17 +87,15 @@ options.MS.localOptimizerOptions = optimset('GradObj','on','display',...
     'iter','TolFun',1e-10,...
     'TolX',1e-10, 'MaxIter', 1000,'algorithm','interior-point');
 options.MS.n_starts = 100;
-options.MS.comp_type = 'sequential'; options.MS.mode = 'visual';
-parameters.guess =   getParameterGuesses(parameters,@(xi)  logLikelihood([xi],M,D,options,conditions),options.MS.n_starts,parameters.min,parameters.max);
-parameters = getMultiStarts(parameters,@(xi) logLikelihood([xi],M,D,options,conditions),options.MS);
+options.MS.comp_type = 'sequential';
+options.MS.mode = 'visual';
+parameters.guess =   getParameterGuesses(parameters,@(xi)  logLikelihood(xi,M,D,options,conditions),options.MS.n_starts,parameters.min,parameters.max);
+parameters = getMultiStarts(parameters,@(xi) logLikelihood(xi,M,D,options,conditions),options.MS);
 
 %% Profile likelihood calculation
-%options.PL.fmincon = optimset('GradObj','on','display','off','MaxIter',200,...
- %   'algorithm','trust-region-reflective');
-options.PL = PestoOptions();
-options.PL.localOptimizer = 'fmincon';
-options.PL.localOptimizerOptions =  optimset('GradObj','on','display','iter-detailed','MaxIter',200,...
+options.profileReoptimizationOptions=optimset('GradObj','on','display',...
+    'iter-detailed','MaxIter',200,...
     'algorithm','interior-point');
-options.PL.parameter_index = 1:parameters.number;
-parameters = getParameterProfiles(parameters,@(xi) logLikelihood(xi,M,D,options,conditions),options.PL);
+parameters = getParameterProfiles(parameters,@(xi) ...
+    logLikelihood(xi,M,D,options,conditions),options.PL);
 save('./project/results/results_diffgeneexp_2D','M','D','options','parameters','conditions')

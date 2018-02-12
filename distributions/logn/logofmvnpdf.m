@@ -1,5 +1,6 @@
 function varargout = logofmvnpdf(varargin)
-
+% Modified version of MATLAB function MVNPDF such that the log-density is
+% returned.
 
 y = varargin{1};
 mu = varargin{2};
