@@ -2,7 +2,7 @@ function [] = models_RRE()
 % This function generates Reaction Rate Euqation model and estimates 
 % the parameters for the models with varying number of parameters for the variances
 
-load('./project/data/conversionprocess_data')
+load('./data/conversionprocess_data')
 
 parameters.name = {'log_{10}(k_{1,1})',...
     'log_{10}(k_{1,2})','log_{10}(k_{2})','log_{10}(k_3)',...
@@ -88,6 +88,6 @@ for model_ind = 1:3
     
     parameters = getMultiStarts(parameters,@(xi) logLikelihood([xi],M,D,options,conditions),options.MS);
     parameters.MS.BIC = -2*parameters.MS.logPost(1)+log(1000*numel(D(1).t))*parameters.number;
-      save(['./project/results/results_RRE_' model_names{model_ind}],'M','D','parameters','conditions','options')
+      save(['./results/results_RRE_' model_names{model_ind}],'M','D','parameters','conditions','options')
     clear parameters 
 end

@@ -1,24 +1,20 @@
-% function [fh,fhm] = plotODEMix(D,M,xi,I,options,tu_ind)
-function varargout = plotODEMix(varargin)
+function varargout = plotODEMM(varargin)
 % Routine to plot the ODE-constrained mixture model
 %
 % USAGE:
-% [...] = plotODEMix(D,M,xi) \n
-% [...] = plotODEMix(D,M,xi,I,options) \n
-% [...] = plotODEMix(D,M,xi,I,options,tu_ind) \n
-% [fh] = plotODEMix(...) \n
-% [fh,fhm] = plotODEMix(...)
+% [...] = plotODEMM(D,M,xi) \n
+% [...] = plotODEMM(D,M,xi,options) \n
+% [...] = plotODEMM(D,M,xi,options,fh) \n
+% [fh] = plotODEMM(...) \n
+% [fh,fhm] = plotODEMM(...)
 %
 % Parameters:
 % varargin:
 % * D: data struct
 % * M: model struct 
 % * xi: parameter vector
-% * I: (optional) indices for which the data and model should be visualized,
-%   the whole data set is visualized if I = []
 % * options: plotting options
-% * tu_ind{e}: struct of indices for the time points/doses for which the data and model
-% should be visualized
+% * fh: figure handle where the plots are added
 %
 % Return values:
 % fh: struct of function handles for each data set
@@ -34,35 +30,6 @@ else
     M = [];
     xi = [];
 end
-I = [];
-if nargin >=4
-    I = varargin{4};
-end
-if isempty(I)
-    I = 1:length(D);
-end
-
-if nargin >= 6
-    tu_ind = varargin{6};
-    if isempty(tu_ind)
-        for e=I
-            if numel(D(e).t) > 1
-                tu_ind{e} = [1:numel(D(e).t)];
-            else
-                tu_ind{e} = 1:size(D(e).u,2);
-            end
-        end
-    end
-else
-    for e=I
-        if numel(D(e).t) > 1
-            tu_ind{e} = [1:numel(D(e).t)];
-        else
-            tu_ind{e} = 1:size(D(e).u,2);
-        end
-    end
-end
-
 
 % Set defaults
 options.type = 'kde';
@@ -83,7 +50,6 @@ options.model.colormap = 'autumn';
 options.data.kde = false;
 options.data.plot = 'filled'; %'empty'
 options.data.col  = 'b';
-options.data.fill_col = 0.7*[1,1,1];
 options.data.lw   = 2;
 options.data.bins = 100;
 options.data.edgealpha =0.5;
@@ -99,6 +65,21 @@ options.sameplot = false;
 options.subplot_lin = false;
 options.plainstyle = false;
 options.legendflag = true;
+options.titleflag = true;
+
+% indices for which the data and model should be visualized,
+% the whole data set is visualized if I = []
+options.I = 1:length(D);
+
+% struct of indices for the time points/doses for which the data and model
+% should be visualized
+for e=options.I
+    if numel(D(e).t) > 1
+        options.tu_ind{e} = 1:numel(D(e).t);
+    else
+        options.tu_ind{e} = 1:size(D(e).u,2);
+    end
+end
 
 for e = 1:length(D)
     options.boundaries(e).y_min = []; % 1 x n_meas vector
@@ -108,13 +89,13 @@ for e = 1:length(D)
     options.xtick{e} = [];
     options.ytick{e} = [];
 end
-if nargin >= 5
-    options = setdefault(varargin{5},options);
+if nargin >= 4
+    options = setdefault(varargin{4},options);
 end
 if ~iscell(options.model.col)
     temp = options.model.col;
     options.model = rmfield(options.model, 'col');
-    for e = I
+    for e = options.I
         options.model.col{e} = temp;
     end
 end
@@ -122,7 +103,7 @@ end
 if ~iscell(options.data.col)
     temp = options.data.col;
     options.data = rmfield(options.data, 'col');
-    for e = I
+    for e = options.I
         options.data.col{e} = temp;
     end
 end
@@ -130,30 +111,22 @@ end
 if ~iscell(options.data.col)
     temp = options.data.col;
     options.data = rmfield(options.data, 'col');
-    for e = I
+    for e = options.I
         options.data.col{e} = temp;
-    end
-end
-
-if ~iscell(options.data.fill_col)
-    temp = options.data.fill_col;
-    options.data = rmfield(options.data, 'fill_col');
-    for e = I
-        options.data.fill_col{e} = temp;
     end
 end
 
 if ~iscell(options.model.levelsets)
     temp = options.model.levelsets;
     options.model = rmfield(options.model, 'levelsets');
-    for e = I
-        for d = 1:max(numel(D(e).u),numel(D(e).t));
+    for e = options.I
+        for d = 1:max(numel(D(e).u),numel(D(e).t))
             options.model.levelsets{e,d} = temp;
         end
     end
 end
 
-for e = I
+for e = options.I
     if options.replicates
         n_replicates{e} = 1:length(D(e).replicate); % consider replicates individually
     else
@@ -161,7 +134,7 @@ for e = I
     end
 end
 if options.hold_on
-    fh = varargin{7};
+    fh = varargin{5};
 end
 %% simulate conditions
 if ~isempty(M)
@@ -171,9 +144,10 @@ if ~isempty(M)
     end
 end
 
+tu_ind = options.tu_ind;
 
 %% loop over experimental conditions that need to be plotted
-for e = I
+for e = options.I
     clearvars w mu sigma Sigma nu
     r=1;
     %% check plotting case
@@ -281,15 +255,15 @@ for e = I
                         end
                         if options.plainstyle
                             set(gca,'ytick','','XMinorTick','off');
+                            box off
                         end
-                        
-                        %set(gca,'ticklength',2*get(gca,'ticklength'))
-                        box off
                         if options.subplot_lin
                             view(90,-90);
                         end
                     end
-                    title(['time ' num2str(D(e).t(tu_ind{e}(k)))]);
+                    if options.titleflag
+                        title(['time ' num2str(D(e).t(tu_ind{e}(k)))]);
+                    end
                 end
             case 'more dose one tp'
                 if inds(ind) > 0
@@ -367,14 +341,13 @@ for e = I
                         end
                         if options.plainstyle
                             set(gca,'ytick','','XMinorTick','off');
+                            box off
                         end
-                        set(gca,'ticklength',2*get(gca,'ticklength'))
-                        box off
                         if options.subplot_lin
                             view(90,-90);
                         end
                     end
-                    if ~options.plainstyle
+                    if options.titleflag
                         title(['dose ' num2str(D(e).u(tu_ind{e}(d)))]);
                     end
                 end

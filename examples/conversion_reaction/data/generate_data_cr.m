@@ -26,7 +26,6 @@ D(1).u = 1;
 D(1).name = 'conversion reaction';
 trajectories = nan(numel(t),n_data);
 for i = 1:w*n_data
-    i
     theta_s1(3) = m_k3+randn(1)*sigma_k3;
     sol = simulate_CR_log(t,theta_s1,[]);
     D(1).y(1,:,i,:) = exp(sol.y'+randn(size(sol.y'))*sigma_noise);
@@ -34,7 +33,6 @@ for i = 1:w*n_data
     
 end
 for i = w*n_data+1:n_data
-    i
     theta_s2(3) = (m_k3+randn(1)*sigma_k3);
     sol = simulate_CR_log(t,theta_s2,[]);
     D(1).y(1,:,i,:) = exp(sol.y'+randn(size(sol.y'))*sigma_noise);
@@ -46,7 +44,6 @@ plotODEMix(D)
 %% check Sigma Point approximation
 test_SP_CR(t,[theta_s1,2*log(sigma_k3)],[])
 test_SP_CR(t,[theta_s2,2*log(sigma_k3)],[])
-%% save data
-save project/data/conversionprocess_data D xi_true
 
-%save(['conversionprocess_data_' num2str(n_data)],'D','xi_true')
+%% save data
+save conversionprocess_data D xi_true

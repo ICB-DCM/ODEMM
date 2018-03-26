@@ -9,7 +9,7 @@ function [] = model_SP_k3()
 
 
 %% load data (for more details on the structure of D see the ReadMe)
-load('./project/data/conversionprocess_data')
+load('./data/conversionprocess_data')
 
 %% Definition of parameters
 parameters.name = {'log_{10}(k_{1,1})','log_{10}(k_{1,2})','log_{10}(k_2)',...
@@ -73,7 +73,8 @@ generateODEMM(D,M,parameters,conditions,options);
 eval(['ODEMM_' M.name]);
 
 % xi = (parameters.max+parameters.min)/2;
-% [g,g_fd_f,g_fd_b,g_fd_c] = testGradient(xi,@(xi) logLikelihood(xi,M,D,options,conditions),1e-4);
+% [g,g_fd_f,g_fd_b,g_fd_c] = testGradient(xi,@(xi) ...
+%           logLikelihood(xi,M,D,options,conditions),1e-4);
 % [g,g_fd_f,g_fd_b,g_fd_c]
 
 %% Multi-start optimization
@@ -90,17 +91,17 @@ parameters.guess =  getParameterGuesses(parameters,@(xi) ...
     options.MS.n_starts, parameters.min,parameters.max);
 
 parameters = getMultiStarts(parameters,@(xi) ...
-    logLikelihood([xi],M,D,options,conditions),options.MS);
+    logLikelihood(xi,M,D,options,conditions),options.MS);
 
 parameters.MS.BIC = -2*parameters.MS.logPost+ log(numel(D(1).t)*1000)*parameters.number;
 %% Profile likelihood calculation
-options.profileReoptimizationOptions = optimset('GradObj','on',...
+options.MS.profileOptimizationOptions = optimset('GradObj','on',...
     'display','off','MaxIter',100,...
     'algorithm','trust-region-reflective');
-options.P.min = max(-6,parameters.min);
-options.P.max = min( 6,parameters.max);
+options.MS.parameter_index = 1:6;
+
 timestart = tic;
 parameters = getParameterProfiles(parameters,@(xi) ...
     logLikelihood(xi,M,D,options,conditions),options.PL);
 parameters.profile_cpu = toc(timestart);
-save('./project/results/results_SP_k3_profiles','M','D','parameters','conditions','options')
+save('./results/results_SP_k3','M','D','parameters','conditions','options')
