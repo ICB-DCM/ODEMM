@@ -62,12 +62,10 @@ options.MS.n_starts = 50;
 options.MS.comp_type = 'sequential'; 
 options.MS.mode = 'visual';
 
-
 model_names = {'onlyone','subpop','timedep'};
 sigma_string = {'only-one','subpopulation-specific','time-dependent'};
 
 for model_ind = 1:3
-    
     parameters.name = {'log_{10}(k_{1,1})','log_{10}(k_{1,2})',...
         'log_{10}(k_{2})','log_{10}(k_3)','w'};
     parameters.number = length(parameters.name);
@@ -79,15 +77,14 @@ for model_ind = 1:3
     generateODEMM(D,M,parameters,conditions,options);
     eval(['ODEMM_' M.name]);
     
-    %xi = (parameters.max+parameters.min)/2;
-    %[g,g_fd_f,g_fd_b,g_fd_c] = testGradient(xi,@(xi) logLikelihood(xi,M,D,options,conditions),1e-4);
-    %[g,g_fd_f,g_fd_b,g_fd_c]
-    
-    parameters.guess =   getParameterGuesses(parameters,@(xi) logLikelihood(xi,M,D,options,conditions),...
+    parameters.guess =   getParameterGuesses(parameters,@(xi) ...
+        logLikelihood(xi,M,D,options,conditions),...
         options.MS.n_starts, parameters.min,parameters.max);
     
-    parameters = getMultiStarts(parameters,@(xi) logLikelihood([xi],M,D,options,conditions),options.MS);
+    parameters = getMultiStarts(parameters,@(xi) ...
+        logLikelihood(xi,M,D,options,conditions),options.MS);
     parameters.MS.BIC = -2*parameters.MS.logPost(1)+log(1000*numel(D(1).t))*parameters.number;
-      save(['./results/results_RRE_' model_names{model_ind}],'M','D','parameters','conditions','options')
+      save(['./results/results_RRE_' model_names{model_ind}],...
+          'M','D','parameters','conditions','options')
     clear parameters 
 end
