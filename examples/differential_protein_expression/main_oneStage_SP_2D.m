@@ -8,7 +8,7 @@ close all
 clc
 
 %% load data
-load('./data/oneStage_data')
+load('./data/oneStage_data_2D')
 
 %% Parameter definition
 parameters.name = {'log_{10}(\lambda)',...
@@ -105,4 +105,4 @@ options.MS.profileOptimizationOptions=optimset('GradObj','on','display',...
     'algorithm','interior-point');
 parameters = getParameterProfiles(parameters,@(xi) ...
     logLikelihood(xi,M,D,options,conditions),options.PL);
-save('./results/results_oneStage_2D','M','D','options','parameters','conditions')
+save('./results/results_oneStage_SP_2D','M','D','options','parameters','conditions')
