@@ -90,12 +90,12 @@ clearvars filename delimiter startRow formatSpec fileID dataArray ans raw col nu
 
 
 t = [0,1,4,7,10,13,16,19,22,25,28,31,34,37];
-plates = {'KM14_ECM_160808_KM184','KM14_ECM_160808_KM185','KM14_ECM_160822_KM186','KM14_ECM_160822_KM187'};
-% D_ctrl(1).y = nan(numel(t),1,10000,10000);
-% D_ctrl(2).y = nan(numel(t),1,10000,10000);
-% D_ctrl(3).y = nan(numel(t),1,10000,10000);
-% D_ctrl(4).y = nan(numel(t),1,10000,10000);
-%%
+plates = {'KM14_ECM_160808_KM184',...
+    'KM14_ECM_160808_KM185',...
+    'KM14_ECM_160822_KM186',...
+    'KM14_ECM_160822_KM187'};
+
+
 for r = 1:4
     for i = 1:numel(t)
         ind = find(Time == t(i) & strcmp(Cond,'Ctrl') & strcmp(Comp,'Ctrl') & strcmp(PlateID,plates{r}));
@@ -126,5 +126,5 @@ for r = 1:4
 end
 D.t = t;
 
-save data_dephospho D
+%save data_dephospho D
 
