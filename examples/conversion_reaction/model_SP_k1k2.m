@@ -5,7 +5,7 @@ function [] = model_SP_k1k2()
 % k1: inter- and intra-subpopulation variable \n
 % k2: cell-to-cell variable \n
 % k3: homogeneous
-load('./project/data/conversionprocess_data')
+load('./data/conversionprocess_data')
 parameters.name = {'mlog(k_{1,1})','mlog(k_{1,2})','mlog(k_2)',...
                    'log10(k_3)','log10(\sigma_{k_1}))','log10(\sigma_{k_2}))','log_{10}(\sigma_{noise}))',......
                     'w'};
@@ -83,4 +83,4 @@ parameters.guess =   getParameterGuesses(parameters,@(xi) logLikelihood(xi,M,D,o
     options.MS.n_starts, parameters.min,parameters.max);
 parameters = getMultiStarts(parameters,@(xi) logLikelihood([xi],M,D,options,conditions),options.MS);
 parameters.MS.BIC = -2*parameters.MS.logPost+ log(numel(D(1).t)*1000)*parameters.number;
-save('./project/results/results_SP_k1k2','M','D','parameters','conditions','options')
+save('./results/results_SP_k1k2','M','D','parameters','conditions','options')

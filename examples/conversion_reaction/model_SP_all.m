@@ -6,7 +6,7 @@ function [] = model_SP_all()
 % k2: cell-to-cell variable \n
 % k3: cell-to-cell variable \n
 
-load('./project/data/conversionprocess_data')
+load('./data/conversionprocess_data')
 parameters.name = {'m(log(k_{1,s1}))','m(log(k_{1,s2}))','m(log(k_2))',...
     'm(log(k_3))','log(\sigma_{k_1}^2)','log(\sigma_{k2}^2)',...
     'log(\sigma_{k_3}^2)','log_{10}(\sigma_{noise}))',......
@@ -85,5 +85,5 @@ options.MS.comp_type = 'sequential'; options.MS.mode = 'visual';
 parameters.guess =   getParameterGuesses(parameters,@(xi) logLikelihood(xi,M,D,options,conditions),...
     options.MS.n_starts, parameters.min,parameters.max);
 parameters = getMultiStarts(parameters,@(xi) logLikelihood([xi],M,D,options,conditions),options.MS);
-save('./project/results/results_SP_all','M','D','parameters','conditions','options')
+save('./results/results_SP_all','M','D','parameters','conditions','options')
 end

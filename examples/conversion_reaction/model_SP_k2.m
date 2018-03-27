@@ -6,7 +6,7 @@ function [] = model_SP_k2()
 % k2: cell-to-cell variable  \n
 % k3: homogeneous
 
-load('./project/data/conversionprocess_data')
+load('./data/conversionprocess_data')
 
 parameters.name = {'log_{10}(k_{1,1})','log_{10}(k_{1,2})','log_{10}(k_2)',...
                    'log_{10}m(log(k_3))','log_{10}(\sigma_{k_3}))','log_{10}(\sigma_{noise}))',......
@@ -81,4 +81,4 @@ parameters.guess =   getParameterGuesses(parameters,@(xi) logLikelihood(xi,M,D,o
     options.MS.n_starts, parameters.min,parameters.max);
 parameters = getMultiStarts(parameters,@(xi) logLikelihood([xi],M,D,options,conditions),options.MS);
 parameters.MS.BIC = -2*parameters.MS.logPost+ log(numel(D(1).t)*1000)*parameters.number;
-save('./project/results/results_SP_k2','M','D','parameters','conditions','options')
+save('./results/results_SP_k2','M','D','parameters','conditions','options')

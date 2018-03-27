@@ -26,9 +26,9 @@ color.full = color.SP;
 color.marg = color.RRE;
 
 %% NGF-induced Erk signaling
-color.Lys = color.SP;
+color.PDL = color.SP;
 color.ColI = [95,50,124]/255;
-color.Lys_data = color.data;
+color.PDL_data = color.data;
 color.ColI_data = [155 84 202]/255;
 
 % differences
