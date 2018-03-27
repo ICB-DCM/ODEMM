@@ -687,7 +687,6 @@ if ~isempty(M) && plotModel
 end
 
 if D(e).n_dim == 1 || ind > 0
-    
     if ~options.plainstyle
         if ind > 0
             xlabel(D(e).measurand{ind});
@@ -736,12 +735,15 @@ else
         set(gca,'ydir','reverse');
     end
     if ~options.plainstyle
-        xlabel(D(e).measurand{1});
-        ylabel(D(e).measurand{2});
-        
+        if plotData
+            xlabel([D(e).measurand{1} ' [log10]']);
+            ylabel([D(e).measurand{2} ' [log10]']);
+        else
+            xlabel(D(e).measurand{1});
+            ylabel(D(e).measurand{2});
+        end
         if ~options.data.kde & legendflag
             legend('data','model')
-            %colormap(options.model.colormap{e})
         end
         
     end
