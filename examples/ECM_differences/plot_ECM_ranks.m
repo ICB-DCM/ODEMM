@@ -1,4 +1,4 @@
-% Visualization script for ranking of the models and differences
+% Visualization script for ranking of the models and differences.
 
 clear all
 close all
@@ -6,8 +6,8 @@ clc
 
 load_plot_settings
 
-load('./project/data/data_matrices_1D2D');
-load ./project/results/results_ECM_differences
+load('./data/data_PDL_ColI'); 
+load ./results/results_ECM_differences
 
 n_data = 0;
 for e = 1:8
@@ -20,24 +20,15 @@ AICs = nan(1,128);
 conv = nan(1,128);
 started = nan(1,128);
 
-notfinished = [];
 for i = 1:128
-    try
-        if isempty(parameters{i})
-            notfinished = [notfinished,i];
-        else
-            logPosts(i) = parameters{i}.MS.logPost(1);
-            parameters{i}.MS.AIC = -2*parameters{i}.MS.logPost + 2*parameters{i}.number;
-            AICs(i) =  parameters{i}.MS.AIC(1);
-            parameters{i}.MS.BIC = -2*parameters{i}.MS.logPost + log(n_data)*parameters{i}.number;
-            BICs(i) =  parameters{i}.MS.BIC(1);
-            conv(i) = sum(2*(parameters{i}.MS.logPost-parameters{i}.MS.logPost(1))>-icdf('chi2',0.95,1));
-            started(i) = sum(~isnan(parameters{i}.MS.logPost));
-            tcpus(i) = nanmean(parameters{i}.MS.t_cpu);
-        end
-    catch
-        notfinished = [notfinished,i];
-    end
+    logPosts(i) = parameters{i}.MS.logPost(1);
+    parameters{i}.MS.AIC = -2*parameters{i}.MS.logPost + 2*parameters{i}.number;
+    AICs(i) =  parameters{i}.MS.AIC(1);
+    parameters{i}.MS.BIC = -2*parameters{i}.MS.logPost + log(n_data)*parameters{i}.number;
+    BICs(i) =  parameters{i}.MS.BIC(1);
+    conv(i) = sum(2*(parameters{i}.MS.logPost-parameters{i}.MS.logPost(1))>-icdf('chi2',0.95,1));
+    started(i) = sum(~isnan(parameters{i}.MS.logPost));
+    tcpus(i) = nanmean(parameters{i}.MS.t_cpu);
 end
 
 comb = nan(2^7,7);
@@ -80,14 +71,15 @@ ylim([0,1]);
 box on
 set(gca,'xticklabel','')
 set(gca,'Position',[0.2,0.2,0.7,0.7]);
-set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 3.9 1.5])
-print('-depsc',['./project/figures/ECM_T_BICweights'])
+set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 2.6 1.5])
+%print('-depsc',['./figures/ECM_T_BICweights'])
 
 set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 3 1.2])
-print('-depsc',['./project/figures/ECM_T_BICweights_Suppl'])
+%print('-depsc',['./figures/ECM_T_BICweights_Suppl'])
 
-%%
+%% Ranking
 figure('name','ranked models')
+subplot('Position',[0.2,0.2,0.75,0.4])
 rankval = nan(1,7);
 for i = 1:7
     temp = BICsort'.*~isnan(comb_temp(:,i));
@@ -97,7 +89,7 @@ for i = 1:7
     temp = comb_temp(:,ranking(i));
     temp(~isnan(temp)) = 8-i;
     plot(1:128,temp,'.','MarkerSize',8,'Color',color.param(ranking(i),1:3)); hold on;
-    h= plot(rankval(ranking(i)),8-i,'ko','MarkerSize',4);
+    h= plot(rankval(ranking(i)),8-i,'ko','MarkerSize',3,'LineWidth',1);
 end
 xlim([1,128])
 ylim([0.5,7.5])
@@ -108,27 +100,22 @@ ylabel({'parameter differences', 'between scaffolds'},'FontSize',6)
 xlabel('model ranking according to BIC','fontsize',6)
 grid on
 set(gca,'xticklabel',{'1','','','','64','','','','128'},'xlim',[1,128]);
-set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 7.5 3.5])
-print('-dpdf','./project/figures/ECM_rankval')
-set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 14 3])
-print('-dpdf','./project/figures/ECM_rankval_Suppl')
-%% BIC values
-figure('name','BICs');
+subplot('Position',[0.2,0.65,0.75,0.25])
 [BICsort] = sort(BICs);
 plot(1:128,BICsort-min(BICsort),'.k','MarkerSize',8); hold on;
-set(gca,'xtick',[1,16,32,48,64,80,96,112,128],'xlim',[1,128],'ylim',[-100,2500]);
 ylabel('BIC-min(BIC)','FontSize',6)
-xlabel('ranked models','fontsize',6)
+set(gca,'xtick',[1,16,32,48,64,80,96,112,128]);
+set(gca,'xticklabel',{''},'xlim',[1,128],'ylim',[-100,3000]);
 grid on
-set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 14 3])
-print('-dpdf','./project/figures/BICs')
+set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 10 4.5])
+%print('-dpdf','./figures/Fig6B')
 %% Zoom in for BIC
 figure('name','BICs zoom');
 plot(1:16,BICsort(1:16)-min(BICsort),'.k','MarkerSize',8); hold on;
-set(gca,'xtick',[1,8,16],'xlim',[1,16])%,'ylim',[-10,150]);
+set(gca,'xtick',[1,8,16],'xlim',[1,16])
 ylabel('BIC-min(BIC)','FontSize',6)
 xlabel('ranked models','fontsize',6)
 grid off
 plot([1,16],[10,10],'k:')
 set(gcf, 'PaperUnits','centimeters', 'PaperPosition',[0 0 5 3])
-print('-dpdf','./project/figures/BICs_zoom')
+%print('-dpdf','./figures/BICs_zoom')

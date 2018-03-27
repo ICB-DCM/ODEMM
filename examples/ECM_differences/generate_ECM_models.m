@@ -5,7 +5,7 @@ function [] = generate_ECM_models()
 % intra-subpopulation variability of TrkA activity and cell-to-cell
 % variability of relative Erk1/2 levels.
 
-load('./project/data/data_matrices_1D2D');
+load('./data/data_PDL_ColI'); 
 
 parameters.max = [6*ones(7,1);... %kinetic
     4*ones(4,1); ... % corr
@@ -18,8 +18,13 @@ parameters.min = [-6*ones(7,1);... %kinetic
     -3*ones(6,1); % noise
     -4]; %weight
 
-differences = {'log_{10}(\kappa_{k_1})','log_{10}(\kappa_{k_2})','log_{10}(\kappa_{k_4})','log_{10}(\kappa_{k_5})',...
-    'log_{10}(\kappa_{k_3[TrkA]_0})','log_{10}(\kappa_{(c_P[Erk]_{0})','log_{10}(\kappa_{w})'};
+differences = {'log_{10}(\kappa_{k_1})',...
+    'log_{10}(\kappa_{k_2})',...
+    'log_{10}(\kappa_{k_4})',...
+    'log_{10}(\kappa_{k_5})',...
+    'log_{10}(\kappa_{k_3[TrkA]_0})',...
+    'log_{10}(\kappa_{(c_P[Erk]_{0})',...
+    'log_{10}(\kappa_{w})'};
 
 comb = nan(2^7,7);
 i = 1;
@@ -39,9 +44,8 @@ for i1 = 0:1
         end
     end
 end
-%%
+%% Generate model for each possible combination of differences
 for icomb = 1:128
-    
     parameters.name = {'log_{10}(k_1)','log_{10}(k_2)','log_{10}(k_4)','log_{10}(k_{5})',...% parameter for simulation
         'log_{10}(\beta_{k_3[TrkA]_{0,1}})','log_{10}(\beta_{k_3TrkA_{0,2}})',...
         'log_{10}(c_P^{1,2}[Erk]_{0,1})',...
@@ -77,12 +81,10 @@ for icomb = 1:128
     
     M.sim_type = 'HO';
     
-    
     options.replicates = false;
     options.write_parameters = true;
     options.measurement_noise = true;
     options.noise_model = 'multiplicative';
-    options.penalize_scaling = false;
     
     inddiff = 30;
     str_symtheta = 'M.sym.theta = [';
