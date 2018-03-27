@@ -1,3 +1,6 @@
+% Script for the single cell prediction for neurons cultured on
+% poly-D-lysine.
+
 clear all
 close all
 clc

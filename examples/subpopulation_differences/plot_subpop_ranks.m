@@ -1,3 +1,6 @@
+% Visualization script for the ranking of the 64 models accounting for
+% differences between subpopulations.
+
 clear all
 close all
 clc

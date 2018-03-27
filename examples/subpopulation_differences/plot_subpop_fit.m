@@ -1,4 +1,4 @@
-% Visualization script for the fits
+% Visualization script for the fits of cells on poly-D-lysine.
 
 close all
 clear all

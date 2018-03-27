@@ -1,4 +1,6 @@
 function model = ODEmodel_syms_sPsET_loglog()
+% This function provides the model of NGF-induced Erk1/2 signaling. It is
+% compiled using AMICI.
 
 model.param = 'log';
 

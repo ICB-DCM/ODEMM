@@ -1,3 +1,6 @@
+% Script for loading the datasets of extracellular scaffolds poly-D-lysin 
+% (PDL) and Collagen I (ColI).
+
 clear all;
 close all;
 clc;

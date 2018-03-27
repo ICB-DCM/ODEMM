@@ -1,3 +1,6 @@
+% Script for the analysis of subpopulation differences in sensory neurons
+% cultured on poly-D-lysine.
+
 clear all
 close all
 clc

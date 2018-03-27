@@ -1,4 +1,4 @@
-% Visualization script for the validation Figure 5D-F
+% Visualization script for the profile likelihoods.
 
 close all
 clear all

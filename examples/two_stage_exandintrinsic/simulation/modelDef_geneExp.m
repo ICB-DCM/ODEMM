@@ -1,4 +1,6 @@
-% Model definition of the reaction network
+% Model definition of the reaction network for the two stage gene
+% expression.
+
 % This routine should return a struct, called System, with the following fields:
 %       System.time 
 %       System.compartments

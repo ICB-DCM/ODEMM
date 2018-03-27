@@ -1,3 +1,6 @@
+% Visualization script for the results of the influence of extracellular 
+% scaffolds on pain signaling in sensory neurons.
+
 clear all
 close all
 clc

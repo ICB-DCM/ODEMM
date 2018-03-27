@@ -1,4 +1,5 @@
-% Visualization script for the validation Figure 5D-F
+% Visualization script for the validation Figure 5D-F of Loos et al., Cell
+% Systems (2018).
 
 close all
 clear all

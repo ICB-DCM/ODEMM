@@ -1,3 +1,6 @@
+% Main script for the analysis of the influence of extracellular scaffolds
+% on pain signaling in sensory neurons.
+
 clear all
 close all
 clc
