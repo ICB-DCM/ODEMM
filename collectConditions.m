@@ -65,4 +65,10 @@ for e = 1:length(D)
         end
     end
 end
+
+% ensure increasing time vector
+for c = 1:length(conditions)
+    conditions(c).time = sort(conditions(c).time);
 end
+end
+
