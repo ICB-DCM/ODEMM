@@ -39,7 +39,7 @@ else
 end
 op_SP.req = [1,1,0,0,0];
 op_SP.type_D = 'diag-matrix-logarithm';
-[status,SP] = getSigmaPointApp_status_mod(@(phi) simulate_onestage(t,phi,[]),xi,estruct,op_SP);
+[status,SP] = getSigmaPointApp_status_mod(@(phi) simulate_oneStage(t,phi,[]),xi,estruct,op_SP);
 
 if status >= 0 
     y = SP.my;
