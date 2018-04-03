@@ -4,5 +4,5 @@ clear all
 close all
 clc
 
-amiwrap('ODEmodel_syms_sPsET_loglog','ODEmodel_syms_sPsET_loglog_syms',pwd)
+amiwrap('ODEmodel_sPsET_loglog','ODEmodel_sPsET_loglog_syms',pwd)
 
