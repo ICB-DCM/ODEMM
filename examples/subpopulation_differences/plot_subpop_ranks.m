@@ -136,8 +136,8 @@ BIConediff = BICs(ind_models);
 
 [sortBIConediff,indsort]=sort(BIConediff,'descend');
 
-load ./results/results_lppds_subpop
-load ./results/results_logmargs_subpop
+load ./results/results_subpop_lppds
+load ./results/results_subpop_logmargs
 
 lppds = lppds(indsort);
 logmargs = logmargs(indsort);
