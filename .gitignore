@@ -32,3 +32,7 @@ rm_anova2/
 examples/subpopulation_differences/make_table.m
 xticklabel_rotate.m
 examples/conversion_reaction/project/results/results_randstart*
+install_toolbox.m
+documentationODEMM.md
+examples/subpopulation_differences/dephosphorylation/plot_subpop_dephoshp_supplement.m
+kstest_2s_2d*
