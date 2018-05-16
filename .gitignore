@@ -13,6 +13,8 @@ examples/conversion_reaction/results/results_BFchains_SP_k3.mat
 examples/conversion_reaction/results/results_scprediction.mat
 examples/conversion_reaction/sclogLikelihood_cr.m
 /examples/ECM_differences_LamColIV/*
+/examples/ECM_differences/run_fittings_ECM.m
+/examples/ECM_differences/run_profile_ECM.m
 /examples/subpopulation_differences/ODEMM*
 /examples/subpopulation_differences/ODEMM*
 examples/subpopulation_differences/dephosphorylation/KM14_KM184-187__ResultsFinal_Cells_final.xls
