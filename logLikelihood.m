@@ -412,7 +412,6 @@ for e = I % Loop: Experimental conditions
                             dlogL = dlogL + sum(dlogpdxi)'*D(e).weighting(d,k);
                         else
                             dlogL = dlogL + sum(dlogpdxi)';
-                            
                         end
                     elseif nargout <= 1
                         logp = computeMixtureProbability(w_s,q) ;

@@ -24,7 +24,6 @@ b.FaceColor = color.param(5,:); hold on;
 myerrorbar(1,mean(Tnon),std(Tnon),0.1);
 myerrorbar(2,mean(Tres),std(Tres),0.1);
 [hy,pv] = ttest2(Tnon,Tres,'Vartype','Unequal')
-[hy2,pv2] = ttest(Tnon-Tres)
 
 box off
 xlim([0.5,2.5])
@@ -50,7 +49,6 @@ b.FaceColor = color.param(6,:); hold on;
 myerrorbar(1,mean(Enon),std(Enon),0.1);
 myerrorbar(2,mean(Eres),std(Eres),0.1);
 [hy,pv] = ttest2(Enon,Eres,'Vartype','Unequal')
-[hy2,pv2] = ttest(Enon-Eres)
 
 box off
 xlim([0.5,2.5])
