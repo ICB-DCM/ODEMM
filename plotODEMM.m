@@ -472,7 +472,7 @@ if D(e).n_dim == 1 || ind > 0
         y_max{e} = options.boundaries(e).y_max;
     end
     
-    if strcmp(M.distribution{1,e},'neg_binomial')
+    if ~isempty(M) & strcmp(M.distribution{1,e},'neg_binomial')
         switch options.x_scale
             case 'lin'
                 y_hist = linspace(y_min{e},y_max{e},options.data.bins+1)';
