@@ -75,11 +75,10 @@ M.sym.offset{r,e} = sym('0');
 [conditions,D] = collectConditions(D,M);
 options.dimension = 'univariate'; % 1D-measurements (for getRREsigmas)
 
-
 parameters.min = [-3*ones(3,1)];
 parameters.max = [ 3*ones(3,1)];
 
-options.rhos = 'only-one';
+options.rhos = 'time-dependent';
 [parameters,conditions,D] = getRRErhos(parameters,conditions,options,D,M);
 M.name = 'test_neg_binomial';
 generateODEMM_extended(D,M,parameters,conditions,options);
