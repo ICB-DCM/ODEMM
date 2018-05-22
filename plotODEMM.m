@@ -11,7 +11,7 @@ function varargout = plotODEMM(varargin)
 % Parameters:
 % varargin:
 % * D: data struct
-% * M: model struct 
+% * M: model struct
 % * xi: parameter vector
 % * options: plotting options
 % * fh: figure handle where the plots are added
@@ -187,7 +187,7 @@ for e = options.I
                     evalModel(xi,M,D,e,r,d,X_c,options,conditions);
                 end
                 for k=1:numel(tu_ind{e})
-                    [lim,hists,grids]=setYminmaxHists(D,e,tu_ind{e}(d),options,inds(ind));
+                    [lim,hists,grids]=setYminmaxHists(D,e,tu_ind{e}(d),options,inds(ind),M);
                     if D(e).n_dim == 2 && ~isempty(M)
                         if inds(ind) == 0
                             if options.data.kde
@@ -277,8 +277,8 @@ for e = options.I
                     if ~isempty(M)
                         evalModel(xi,M,D,e,r,tu_ind{e}(d),X_c,options,conditions);
                     end
-                    [lim,hists,grids]=setYminmaxHists(D,e,tu_ind{e}(d),options,inds(ind));
-
+                    [lim,hists,grids]=setYminmaxHists(D,e,tu_ind{e}(d),options,inds(ind),M);
+                    
                     if D(e).n_dim == 2 && ~isempty(M)
                         if inds(ind) == 0
                             if options.data.kde
@@ -300,7 +300,7 @@ for e = options.I
                                 evalPdf(M,D,e,tu_ind{e}(d),k,options,...
                                     (options.legendflag & d==numel(tu_ind{e})),...
                                     inds(ind),lim,hists,grids,1,0);
-                            end 
+                            end
                         else
                             if options.subplot_lin
                                 subplot(1,numel(tu_ind{e}),d);
@@ -381,7 +381,7 @@ end
 end
 
 function [] = evalModel(xi,M,D,e,r,d,X_c,options,conditions)
-global w mu sigma Sigma nu
+global w mu sigma Sigma nu rho tau
 for s = 1:M.n_subpop
     u_dse = [D(e).u(:,d);M.u{s,e}];
     t_ind = find(conditions(D(e).c(s,d)).time==D(e).t);
@@ -394,7 +394,7 @@ for s = 1:M.n_subpop
     X(:,1:D(e).n_dim) = bsxfun(@plus,bsxfun(@times,M.scaling{r,e}(xi,u_dse)',Z(:,1:D(e).n_dim)),...
         M.offset{r,e}(xi,u_dse)');
     if ~isempty(M.var_ind{s,e})
-        s_temp= M.scaling{r,e}(xi,u_dse); 
+        s_temp= M.scaling{r,e}(xi,u_dse);
         temp = tril(ones(D(e).n_dim,D(e).n_dim));
         temp(temp==0) = NaN;
         covscale = (s_temp*s_temp').*temp;
@@ -413,6 +413,9 @@ for s = 1:M.n_subpop
                 nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
                 mu{s} = M.mu{s,e}(D(e).t,X,xi,u_dse);
                 sigma{s} = M.sigma{s,e}(D(e).t,X,xi,nu{s},u_dse);
+            case 'neg_binomial'
+                rho{s} = M.rho{s,e}(D(e).t,X,xi,u_dse);
+                tau{s} = M.tau{s,e}(D(e).t,X,rho{s},xi,u_dse);
             otherwise
                 error('Invalid distribution assumption')
         end
@@ -431,7 +434,7 @@ for s = 1:M.n_subpop
 end
 end
 
-function [lim,hists,grids] = setYminmaxHists(D,e,d,options,ind)
+function [lim,hists,grids] = setYminmaxHists(D,e,d,options,ind,M)
 if D(e).n_dim == 1 || ind > 0
     if isempty(options.boundaries(e).y_min) || isempty(options.boundaries(e).y_max)
         y_min{e} =  inf;
@@ -468,19 +471,37 @@ if D(e).n_dim == 1 || ind > 0
         y_min{e} = options.boundaries(e).y_min;
         y_max{e} = options.boundaries(e).y_max;
     end
-    switch options.x_scale
-        case 'lin'
-            y_hist = linspace(y_min{e},y_max{e},options.data.bins+1)';
-            d_y_hist = y_hist(2)-y_hist(1);
-            y_grid = linspace(y_min{e},y_max{e},options.model.points+1)';
-            d_y_grid = y_grid(2)-y_grid(1);
-        case 'log'
-            z_hist = linspace(log10(y_min{e}),log10(y_max{e}),options.data.bins+1)';
-            d_y_hist = (z_hist(2)-z_hist(1));
-            y_hist = 10.^z_hist;
-            z_grid = linspace(log10(y_min{e}),log10(y_max{e}),options.model.points+1)';
-            d_y_grid = (z_grid(2)-z_grid(1));
-            y_grid = 10.^z_grid;
+    
+    if strcmp(M.distribution{1,e},'neg_binomial')
+        switch options.x_scale
+            case 'lin'
+                y_hist = linspace(y_min{e},y_max{e},options.data.bins+1)';
+                d_y_hist = y_hist(2)-y_hist(1);
+                y_grid = [floor(y_min{e}):ceil(y_max{e})]';
+                d_y_grid = y_grid(2)-y_grid(1);
+            case 'log'
+                z_hist = linspace(log10(y_min{e}),log10(y_max{e}),options.data.bins+1)';
+                d_y_hist = (z_hist(2)-z_hist(1));
+                y_hist = 10.^z_hist;
+                z_grid = [floor(log10(y_min{e})):log10(ceil(y_max{e}))]'';
+                d_y_grid = (z_grid(2)-z_grid(1));
+                y_grid = 10.^z_grid;
+        end
+    else
+        switch options.x_scale
+            case 'lin'
+                y_hist = linspace(y_min{e},y_max{e},options.data.bins+1)';
+                d_y_hist = y_hist(2)-y_hist(1);
+                y_grid = linspace(y_min{e},y_max{e},options.model.points+1)';
+                d_y_grid = y_grid(2)-y_grid(1);
+            case 'log'
+                z_hist = linspace(log10(y_min{e}),log10(y_max{e}),options.data.bins+1)';
+                d_y_hist = (z_hist(2)-z_hist(1));
+                y_hist = 10.^z_hist;
+                z_grid = linspace(log10(y_min{e}),log10(y_max{e}),options.model.points+1)';
+                d_y_grid = (z_grid(2)-z_grid(1));
+                y_grid = 10.^z_grid;
+        end
     end
 elseif D(e).n_dim == 2 && ind == 0
     if isempty(options.boundaries(e).y_min) || isempty(options.boundaries(e).y_max)
@@ -542,7 +563,7 @@ end
 
 
 function [] = evalPdf(M,D,e,d,k,options,legendflag,ind,lim,hists,grids,plotModel,plotData)
-global w mu sigma Sigma nu
+global w mu sigma Sigma nu rho tau
 y_min = lim.y_min;
 y_max = lim.y_max;
 y_hist = hists.y_hist;
@@ -603,6 +624,9 @@ if ~isempty(M)
                 case 't'
                     p = p + w{s}(k)*exp(mylogofmvtpdf(y_grid,mu{s}(k),sigma{s}(k),nu{s}));
                     p_s{s} = w{s}(k)*exp(mylogofmvtpdf(y_grid,mu{s}(k),sigma{s}(k),nu{s}));
+                case 'neg_binomial'
+                    p = p + w{s}(k)*exp(logofnbinpdf(y_grid,tau{s}(k),rho{s}(k)));
+                    p_s{s} = w{s}(k)*exp(logofnbinpdf(y_grid,tau{s}(k),rho{s}(k)));
             end
         end
     else
