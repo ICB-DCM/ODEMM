@@ -6,6 +6,7 @@ doc/*
 *.pdf
 old_Biopaper/
 notUpload/
+examples/neg_binomial/data/negbin_data.mat
 /examples/two_stage_intrinsic/*
 examples/conversion_reaction/results/results_scprediction_onecell_firsttp.mat
 examples/conversion_reaction/results/results_scprediction_onecell_lasttp.mat
