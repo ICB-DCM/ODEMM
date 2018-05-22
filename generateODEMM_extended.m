@@ -167,25 +167,27 @@ for e = 1:length(D)
                                 else
                                     M.sym.ind{s,e} = sym(D(e).Sigma{s});
                                 end
-                            case 'condition-dependent'
-                                if D(e).n_dim == 1
-                                    M.sym.sigma{s,e} = 10.^xi(conditions(D(e).c(s,1)).sigma);
-                                else
-                                    M.sym.ind{s,e} = sym(conditions(D(e).c(s,1)).Sigma);
-                                end
+%                             case 'condition-dependent'
+%                                 if D(e).n_dim == 1
+%                                     M.sym.sigma{s,e} = 10.^xi(conditions(D(e).c(s,1)).sigma);
+%                                 else
+%                                     M.sym.ind{s,e} = sym(conditions(D(e).c(s,1)).Sigma);
+%                                 end
                             case {'time-independent','only-one'}
                                 M.sym.sigma{s,e} = 10.^xi(ones(1,numel(D(e).t))*conditions(D(e).c(s,1)).sigma);
                         end
                     case 'neg_binomial'
                         switch options.rhos
                             case 'subpopulation-specific'
-                                M.sym.rho{s,e} = xi(ones(1,numel(D(e).t))*D(e).rho);
+                                M.sym.rho{s,e} = xi(ones(1,numel(D(e).t))*D(e).rho{s});
                             case 'time-dependent'
                                 M.sym.rho{s,e} = xi(D(e).rho{s});
-                            case 'condition-dependent'
-                                M.sym.rho{s,e} = xi(conditions(D(e).c(s,1)).rho);
+%                             case 'condition-dependent'
+%                                 M.sym.rho{s,e} = xi(conditions(D(e).c(s,1)).rho);
                             case {'time-independent','only-one'}
                                 M.sym.rho{s,e} = xi(ones(1,numel(D(e).t))*conditions(D(e).c(s,1)).rho);
+                            otherwise
+                                error('case not defined');
                         end
                         
                 end
