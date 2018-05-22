@@ -303,6 +303,7 @@ for s = 1:M.n_subpop
                     str_temp = regexprep(char(M.sym.tau{s,e}),'xi_([0-9]+)','xi($1)');
                     str_temp = regexprep(str_temp,'\^','.^');
                     str_temp = regexprep(str_temp,'\*','.*');
+                    str_temp = regexprep(str_temp,'\/','./');
                     str_tau = strcat(str_tau,regexprep(str_temp,'x_([0-9]+)','x(:,$1)'));
                     str_tau = [str_tau '];'];
                     %% dtaudxi
