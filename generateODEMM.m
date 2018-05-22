@@ -57,9 +57,8 @@ function varargout = generateODEMM(D,M,parameters,conditions,varargin)
 %               = false (default)
 %     sigmas: parametrization of the variance in case of using only a
 %     mechanistic description of the mean \n
-%         = ''condition-dependent'': (default) assign sigma for every time point \n
-%         = ''time-independent'':  sigma stays the same for subpopulation
-%                       and some dosage \n
+%         = ''time-dependent'': (default)  one sigma for every subpopulation and time point \n
+%         = ''subpopulation-specific'': for every subpopulation one sigma \n
 %         = ''only-one'': only one sigma for everything
 %
 % Required fields of D:
@@ -162,13 +161,13 @@ for e = 1:length(D)
                         else
                             M.sym.ind{s,e} = sym(D(e).Sigma{s});
                         end
-                    case 'condition-dependent'
-                        if D(e).n_dim == 1
-                            M.sym.sigma{s,e} = 10.^xi(conditions(D(e).c(s,1)).sigma);
-                        else
-                            M.sym.ind{s,e} = sym(conditions(D(e).c(s,1)).Sigma);
-                        end
-                    case {'time-independent','only-one'}
+%                     case 'condition-dependent'
+%                         if D(e).n_dim == 1
+%                             M.sym.sigma{s,e} = 10.^xi(conditions(D(e).c(s,1)).sigma);
+%                         else
+%                             M.sym.ind{s,e} = sym(conditions(D(e).c(s,1)).Sigma);
+%                         end
+                    case {'only-one'}
                         M.sym.sigma{s,e} = 10.^xi(ones(1,numel(D(e).t))*conditions(D(e).c(s,1)).sigma);
                 end
             case {'HO','MCM'}
@@ -344,7 +343,6 @@ for s = 1:M.n_subpop
                                         str_noise = [str_noise ']'];
                                     end
                                 end
-                                
                                 str_dnoisedxi = '[';
                                 M.sym.dnoisedxi{e} = jacobian(M.sym.sigma_noise{e}.^2,xi);
                                 for l = 1:D(e).n_dim
@@ -380,7 +378,6 @@ for s = 1:M.n_subpop
                                         str_noise = [str_noise ']'];
                                     end
                                 end
-                                
                                 str_dnoisedxi = '[';
                                 M.sym.dnoisedxi{e} = jacobian(M.sym.sigma_noise{e}.^2,xi);
                                 for l = 1:D(e).n_dim
@@ -425,8 +422,8 @@ for s = 1:M.n_subpop
                             str_dsigmadxi = ['M.dSigmadxi{s,e} = @(t,x,dxdxi,xi,u) func_dSigmadxi_RRE(t,x,dxdxi,xi,' num2str(D(e).n_dim) ', ' ind ');'];
                         end
                     else
-                        str_sigma = ['M.Sigma{s,e} = @(t,x,xi,u) ']
-                        str_dsigmadxi = ['M.dSigmadxi{s,e} = @(t,x,dxdxi,xi,u) ' ]
+                        str_sigma = ['M.Sigma{s,e} = @(t,x,xi,u) '];
+                        str_dsigmadxi = ['M.dSigmadxi{s,e} = @(t,x,dxdxi,xi,u) ' ];
                         for d = 1:size(D(e).u,2)
                             str = ['('];
                             for d_dim = 1:size(D(e).u,1)
@@ -465,15 +462,12 @@ for s = 1:M.n_subpop
                                 str_sigma = strcat(str_sigma,'+');
                                 str_dsigmadxi = strcat(str_dsigmadxi,'+');
                             end
-                            
                         end
                         str_sigma = strcat(str_sigma,';');
                         str_dsigmadxi = strcat(str_dsigmadxi,';');
                     end
-                    
             end
         else
-            
             str_sigma = ['M.sigma{s,e} = @(t,x,xi,u)\t'];
             str_dsigmadxi = ['M.dsigmadxi{s,e} = @(t,x,dxdxi,xi,u)\t'];
             switch M.sim_type
@@ -537,10 +531,10 @@ for s = 1:M.n_subpop
                                     M.sym.sigma{s,e} = 10.^xi(ones(1,numel(D(e).t))*D(e).sigma{s});
                                 case 'time-dependent'
                                     M.sym.sigma{s,e} = 10.^xi((D(e).sigma{s}(d)));
-                                case 'condition-dependent'
-                                    M.sym.sigma{s,e} = 10.^xi(conditions(D(e).c(s,d)).sigma);
-                                case 'time-independent'
-                                    M.sym.sigma{s,e} = 10.^xi(ones(1,numel(D(e).t))*conditions(D(e).c(s,d)).sigma);
+%                                 case 'condition-dependent'
+%                                     M.sym.sigma{s,e} = 10.^xi(conditions(D(e).c(s,d)).sigma);
+%                                 case 'time-independent'
+%                                     M.sym.sigma{s,e} = 10.^xi(ones(1,numel(D(e).t))*conditions(D(e).c(s,d)).sigma);
                                 case 'only-one'
                                     error('TODO')
                             end

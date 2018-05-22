@@ -22,8 +22,7 @@ function [parameters, conditions, varargout] = getRREsigmas(parameters,condition
 %
 %  Optional fields of options:
 %  sigmas: \n
-%      = ''condition-dependent'': (default) assign sigma for every time point \n
-%      = ''time-dependent'': one sigma for every subpopulation and time point \n
+%      = ''time-dependent'': (default)  one sigma for every subpopulation and time point \n
 %      = ''only-one'': only one sigma for everything \n
 %      = ''subpopulation-specific'': for every subpopulation one sigma \n
 %  boundaries: boundaries for optimization for the sigma parameters with
@@ -124,25 +123,10 @@ for c=1:length(conditions)
             conditions(c).Sigma = [];
     end
     switch options.sigmas
-        case 'condition-dependent'
-            for n_t = 1:length(conditions(c).time)
-                switch options.dimension
-                    case 'univariate'
-                    parameters.name{k} = ['log_{10}(\sigma_{cond. ' num2str(c) ', t=' num2str(conditions(c).time(n_t)) ')}'];
-                    conditions(c).sigma = [conditions(c).sigma, k];
-                    k = k+1;        
-                    case 'multivariate'
-                    conditions(c).Sigma = [conditions(c).Sigma, [k;k+1;k+2]];    
-                    parameters.name{k} = ['log_{10}(\Sigma_{cond. ' num2str(c) ', t=' num2str(conditions(c).time(n_t)) ', var meas.1)}'];
-                    parameters.name{k+1} = ['log_{10}(\Sigma_{cond. ' num2str(c) ', t=' num2str(conditions(c).time(n_t)) ', var meas.2)}'];
-                    parameters.name{k+2} = ['log_{10}(\Sigma_{cond. ' num2str(c) ', t=' num2str(conditions(c).time(n_t)) ', cov)}'];
-                    k = k+3;         
-                end
-            end
-        case 'time-independent'
-            parameters.name{k} = ['log_{10}(\sigma_{cond. ' num2str(c) ')}'];
-            conditions(c).sigma = [conditions(c).sigma, k];
-            k = k+1;   
+%         case 'time-independent'
+%             parameters.name{k} = ['log_{10}(\sigma_{cond. ' num2str(c) ')}'];
+%             conditions(c).sigma = [conditions(c).sigma, k];
+%             k = k+1;   
         case 'only-one'
             if c == 1
                parameters.name{k} = ['log_{10}(\sigma)'];
