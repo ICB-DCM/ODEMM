@@ -53,6 +53,7 @@ options.data.col  = 'b';
 options.data.lw   = 2;
 options.data.bins = 100;
 options.data.edgealpha =0.5;
+options.data.facealpha = 1;
 % 2D
 options.data.marker = 'k.';
 options.data.markersize = 1.5;
@@ -92,6 +93,7 @@ end
 if nargin >= 4
     options = setdefault(varargin{4},options);
 end
+
 if ~iscell(options.model.col)
     temp = options.model.col;
     options.model = rmfield(options.model, 'col');
@@ -134,7 +136,8 @@ for e = options.I
     end
 end
 if options.hold_on
-    fh = varargin{5};
+    fh = options.fh;
+    fhm = options.fhm;
 end
 %% simulate conditions
 if ~isempty(M)
@@ -160,7 +163,6 @@ for e = options.I
     end
     %% open figures
     if (~options.sameplot || mod(e,2)) & ~options.hold_on
-        
         if D(e).n_dim > 1 && options.marginals
             for n = 1:D(e).n_dim
                 fhm{e,n} = figure('name',[D(e).name ...
@@ -168,7 +170,6 @@ for e = options.I
             end
         end
         fh{e} = figure('name',[D(e).name]);
-        
     end
     %% evaluate model
     inds = 0;
@@ -193,7 +194,6 @@ for e = options.I
                             if options.data.kde
                                 for i = 1:2
                                     subplot(2,numel(tu_ind{e}),c);
-                                    
                                     if i == 1
                                         c = c+numel(tu_ind{e});
                                     else
@@ -225,7 +225,6 @@ for e = options.I
                                 inds(ind),lim,hists,grids,1,1);
                         end
                     elseif D(e).n_dim == 2 && isempty(M)
-                        
                         if options.subplot_lin
                             subplot(1,numel(tu_ind{e}),k);
                         else
@@ -266,11 +265,20 @@ for e = options.I
                     end
                 end
             case 'more dose one tp'
-                if inds(ind) > 0
-                    figure(fhm{e,inds(ind)});
+                if ~options.sameplot || mod(e,2)
+                    if inds(ind) > 0
+                        figure(fhm{e,inds(ind)});
+                    else
+                        figure(fh{e});
+                    end
                 else
-                    figure(fh{e});
+                    if inds(ind) > 0
+                        figure(fhm{e-1,inds(ind)});
+                    else
+                        figure(fh{e-1});
+                    end
                 end
+                
                 k=1;
                 c=1;
                 for d=1:numel(tu_ind{e})
@@ -404,15 +412,11 @@ for s = 1:M.n_subpop
             X(:,D(e).n_dim+n) = covscale(n)*Z(:,D(e).n_dim+n);
         end
     end
-    if D(e).n_dim == 1
+    if D(e).n_dim == 1 && ~strcmp(M.distribution{s,e},'students_t')
         switch M.distribution{s,e}
             case {'norm', 'logn', 'logn_median', 'logn_mean'}
                 sigma{s} = M.sigma{s,e}(D(e).t,X,xi,u_dse);
                 mu{s} = M.mu{s,e}(D(e).t,X,sigma{s},xi,u_dse);
-            case 't'
-                nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
-                mu{s} = M.mu{s,e}(D(e).t,X,xi,u_dse);
-                sigma{s} = M.sigma{s,e}(D(e).t,X,xi,nu{s},u_dse);
             case 'neg_binomial'
                 rho{s} = M.rho{s,e}(D(e).t,X,xi,u_dse);
                 tau{s} = M.tau{s,e}(D(e).t,X,rho{s},xi,u_dse);
@@ -424,8 +428,10 @@ for s = 1:M.n_subpop
             case {'norm', 'logn', 'logn_median', 'logn_mean'}
                 Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
                 mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
-            case 't'
-                error('todo multidim tdist');
+            case 'students_t'
+                nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
+                Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
+                mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
             otherwise
                 error('Invalid distribution assumption')
         end
@@ -472,7 +478,7 @@ if D(e).n_dim == 1 || ind > 0
         y_max{e} = options.boundaries(e).y_max;
     end
     
-    if ~isempty(M) & strcmp(M.distribution{1,e},'neg_binomial')
+    if ~isempty(M) && strcmp(M.distribution{1,e},'neg_binomial')
         switch options.x_scale
             case 'lin'
                 y_hist = linspace(y_min{e},y_max{e},options.data.bins+1)';
@@ -621,9 +627,9 @@ if ~isempty(M)
                     p = p + w{s}(k)*pdf('norm',y_grid,mu{s}(k),sigma{s}(k));
                     p_s{s} = w{s}(k)*pdf('norm',y_grid,mu{s}(k),sigma{s}(k));
                     cp = cp + w{s}(k)*cdf('norm',y_grid,mu{s}(k),sigma{s}(k));
-                case 't'
-                    p = p + w{s}(k)*exp(mylogofmvtpdf(y_grid,mu{s}(k),sigma{s}(k),nu{s}));
-                    p_s{s} = w{s}(k)*exp(mylogofmvtpdf(y_grid,mu{s}(k),sigma{s}(k),nu{s}));
+                case 'students_t'
+                    p = p + w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
+                    p_s{s} = w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
                 case 'neg_binomial'
                     p = p + w{s}(k)*exp(logofnbinpdf(y_grid,tau{s}(k),rho{s}(k)));
                     p_s{s} = w{s}(k)*exp(logofnbinpdf(y_grid,tau{s}(k),rho{s}(k)));
@@ -638,6 +644,8 @@ if ~isempty(M)
                     P = P + w{s}(k)*reshape(bsxfun(@rdivide,mvnpdf(log([Y1(:),Y2(:)]),mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1])),prod([Y1(:),Y2(:)],2)),size(Y1));
                 case 'norm'
                     P =  P + w{s}(k)*reshape(mvnpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1])),size(Y1));
+                case {'students_t'}
+                    P =  P + w{s}(k)*reshape(exp(logofmvtpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),nu{s}(k)),size(Y1)));
             end
         end
     end
@@ -651,6 +659,7 @@ if (~options.replicates && ~isempty(D(e).y) && plotData) || ...
                 case 'filled'
                     legendhandles.data = fill(y_hist(round(0.5:0.5:length(y_hist))),[0;h(round(0.5:0.5:length(h)));0],options.data.col{e}); hold on;
                     legendhandles.data.EdgeColor = options.data.col{e};
+                    legendhandles.data.FaceAlpha = options.data.facealpha;
                 case 'empty'
                     legendhandles.data = plot(y_hist(round(0.5:0.5:length(y_hist))),[0;h(round(0.5:0.5:length(h)));0],...
                         '-','color',options.data.col{e},'linewidth',options.data.lw); hold on;
@@ -746,15 +755,15 @@ else
         set(gca,'xscale',options.x_scale);
         set(gca,'yscale',options.x_scale);
     end
-    if ~options.sameplot || mod(e,2)
+    %if ~options.sameplot || mod(e,2)
         if plotModel
             xlim([y_min{e}(1),y_max{e}(1)]);
             ylim([y_min{e}(2),y_max{e}(2)])
         end
-    else
-        xlim([y_min{e-1}(1),y_max{e-1}(1)]);
-        ylim([y_min{e-1}(2),y_max{e-1}(2)])
-    end
+    %else
+    %    xlim([y_min{e-1}(1),y_max{e-1}(1)]);
+    %    ylim([y_min{e-1}(2),y_max{e-1}(2)])
+    %end
     if options.switch_axes
         set(gca,'ydir','reverse');
     end

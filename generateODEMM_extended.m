@@ -662,8 +662,12 @@ for s = 1:M.n_subpop
                             str_temp = regexprep(str_temp,'x_([0-9]+)','x(:,$1)');
                             str_rho = strcat(str_rho,str_temp);
                             str_rho = [str_rho '];'];
+                            
                             str_drhodxi = strcat(str_drhodxi,getStrDerivative2Terms(M.sym.rho{s,e},x,dxdxi,xi));
+                            str_drhodxi = regexprep(str_drhodxi,'\/','./');
+                            str_drhodxi = regexprep(str_drhodxi,'\^','.^');
                             str_drhodxi = [str_drhodxi, ';'];
+                            
                         case 'RRE'
                             str_rho = [str_rho '['];
                             for k = 1:length(D(e).t)
