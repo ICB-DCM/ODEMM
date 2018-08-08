@@ -59,6 +59,7 @@ elseif ndims(y)~=2
 end
 
 % Get size of data
+y = y';
 [d,n] = size(y);
 if d<1
     error(message('stats:mvtpdf:TooFewDimensions'));

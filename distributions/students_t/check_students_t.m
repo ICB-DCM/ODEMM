@@ -9,17 +9,16 @@ clc
 %   dSigmadxi: n_xi x d x d
 %   dnudxi: n_xi x 1
 
-n = 10;
+n = 1;
 d = 2;
 mu = [1,1]';
 Sigma = [1,-0.5;-0.5,1];
 nu = 3;
 
-
 n_xi = 6;
 y = mvtrnd(Sigma,nu,n)'+mu;
-y = y;
-p = logofmvtpdf(y,mu,Sigma,nu)
+p = logofmvtpdf(y,mu,Sigma,nu);
+
 
 
 dmudxi = [1,0;

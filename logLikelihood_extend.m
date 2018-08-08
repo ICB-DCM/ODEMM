@@ -109,6 +109,7 @@ if ~isfield(M,'w_ind')
         end
     end
 end
+
 %% collect all different conditions for the simulations and simulate them
 if nargin < 5 || isempty(conditions)
     [conditions,D] = collectConditions(D,M);
@@ -196,23 +197,29 @@ for e = I % Loop: Experimental conditions
                         end
                     case 'neg_binomial'
                         rho{s} = M.rho{s,e}(D(e).t,X,xi,u_dse);
+                        assert(sum(rho{s}<0)==0,'negative binomial distribution requires variance to be greater than the mean')
                         tau{s} = M.tau{s,e}(D(e).t,X,rho{s},xi,u_dse);
                     case 'students_t'
                         nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
-                        mu{s} = M.mu{s,e}(D(e).t,X,xi,u_dse);
-                        Sigma{s} = M.Sigma{s,e}(D(e).t,X,nu{s},xi,u_dse);
+                        Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
+                        mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
                     case 'skew_t'
                         nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
                         mu{s} = M.mu{s,e}(D(e).t,X,xi,u_dse);
-                        Sigma{s} = M.Sigma{s,e}(D(e).t,X,nu{s},xi,u_dse);
+                        Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
                         %delta{s} = M.delta{s,e}(D(e).t,X,nu{s},xi,u_dse);
                     case 'skew_norm'
                         Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
                         mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
                         delta{s} = M.delta{s,e}(D(e).t,X,nu{s},xi,u_dse);
+                    otherwise
+                        error(['Check distribution assumption, provided assumption ''' ...
+                             M.distribution{s,e} ''' not covered. Only '...
+                             '''neg_binomial'',''students_t'',''logn'',''norm'',''skew_t'',''skew_norm'''])
                 end
                 w{s} = M.w{s,e}(D(e).t,X,xi,u_dse);
-                % Sensitivities
+                
+                % Derivatives of distribution parameters
                 if nargout >= 2
                     dXdxi{s} = zeros(numel([M.mean_ind{s,e},M.var_ind{s,e},M.w_ind{s,e}]),length(xi),length(D(e).t));
                     for k = 1:length(D(e).t)
@@ -253,7 +260,7 @@ for e = I % Loop: Experimental conditions
                             case 'students_t'
                                 dnudxi{s} = M.dnudxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                                 dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                                dsigmadxi{s} = M.dsigmadxi{s,e}(D(e).t,X,dXdxi{s},nu{s},dnudxi{s},xi,u_dse);
+                                dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                             case 'skew_t'
                                 %nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
                                 %mu{s} = M.mu{s,e}(D(e).t,X,xi,u_dse);
@@ -269,6 +276,7 @@ for e = I % Loop: Experimental conditions
                 end % gradient
             end % subpopulation
             
+            % Loop over the time points and 
             for k = 1:length(D(e).t)
                 % get data
                 if options.replicates
@@ -349,14 +357,14 @@ for e = I % Loop: Experimental conditions
                                     [q(:,s),dqdxi] = logofnbinpdf(y,tau{s}(k),rho{s}(k),dtaudxi{s}(k,:),drhodxi{s}(k,:));
                                     H(:,:,s) = bsxfun(@plus,dwdxi{s}(k,:),w{s}(k)*dqdxi);
                                 end
-                           case 'students_t'
-                               if nargout<2
-                                    q(:,s) = logofmvtpdf(y,tau{s}(k),rho{s}(k));
-                               else
-                                    [q(:,s),dqdxi] = logofmvtpdf(y,tau{s}(k),rho{s}(k),dtaudxi{s}(k,:),drhodxi{s}(k,:));
-                                    H(:,:,s) = bsxfun(@plus,dwdxi{s}(k,:),w{s}(k)*dqdxi);
-                               end
-                                
+                            case 'students_t'
+                                if nargout<2
+                                    q(:,s) = logofmvtpdf(y,mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),nu{s}(k));
+                                else
+                                    [q(:,s),dqdxi] = logofmvtpdf(y,mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),nu{s}(k),...
+                                        dmudxi{s}(k,:),permute(dSigmadxi{s}(k,:,:,:),[3,4,1,2]),dnudxi{s}(k,:));
+                                    H(:,:,s) = bsxfun(@plus,dwdxi{s}(k,:),w{s}(k)*dqdxi');
+                                end
                         end % distribution
                         w_s = [w_s,w{s}(k)];
                     else % not robust, not recommended
@@ -428,6 +436,8 @@ for e = I % Loop: Experimental conditions
                                         y/(1-rho{s}(k,:))*drhodxi{s}(k,:)+...
                                         tau{s}(k)./rho{s}(k).*drhodxi{s}(k,:));
                                 end
+                            case 'student_t'
+                                error('non-robust version for student t not supported')
                         end % distribution
                     end % robust
                 end % subpopulation loop
