@@ -458,7 +458,7 @@ for s = 1:M.n_subpop
                             end
                             if strcmp(M.distribution{s,e},'students_t')
                                 
-                                    %% w
+                                %% w
                                 str_nu =['M.nu{s,e} = @(t,x,xi,u) '];
                                 str_nu = strcat(str_nu,strcat(replace_xi_x_u(M.sym.nu{s,e}),';'));
                                 %% dwdxi
@@ -466,18 +466,6 @@ for s = 1:M.n_subpop
                                 str_dnudxi = [str_dnudxi, ';'];
                                 str_dnudxi = regexprep(str_dnudxi,'u_([0-9]+)','u($1)');
                                 
-%                                 
-%                                 % nu
-%                                 str_nu =['M.nu{s,e} = @(t,x,xi,u) ['];
-%                                 str_temp = regexprep(char(M.sym.nu{s,e}),'xi_([0-9]+)','xi($1)');
-%                                 str_temp = regexprep(str_temp,'\^','.^');
-%                                 str_nu = strcat(str_nu,regexprep(str_temp,'x_([0-9]+)','x(:,$1)'));
-%                                 str_nu = [str_nu '];'];
-%                                 % dnudxi                                
-%                                 str_dnudxi = strcat(['M.dnudxi{s,e} = @(t,x,dxdxi,xi,u)'], ...
-%                                     getStrDerivative2Terms(M.sym.w{s,e}, x, dxdxi, xi));
-%                                 str_dnudxi = [str_dnudxi, ';'];
-%                                 str_dnudxi = regexprep(str_dnudxi,'u_([0-9]+)','u($1)');
                             end
                     end
                 case 'RRE'
@@ -553,8 +541,7 @@ for s = 1:M.n_subpop
                     switch M.sim_type
                         case {'HO','MCM'}
                             str_sigma = [str_sigma '['];
-                            str_temp = regexprep(char(M.sym.sigma{s,e}),'xi_([0-9]+)','xi($1)');
-                            str_temp = regexprep(str_temp,'/','./');
+                            str_temp = regexprep(replace_by_bsxfun(char(M.sym.sigma{s,e})),'xi_([0-9]+)','xi($1)');
                             str_temp = regexprep(str_temp,'\^','.^');
                             str_temp = regexprep(str_temp,'x_([0-9]+)','x(:,$1)');
                             str_sigma = strcat(str_sigma,str_temp);
@@ -656,15 +643,14 @@ for s = 1:M.n_subpop
                     switch M.sim_type
                         case {'HO','MCM'}
                             str_rho = [str_rho '['];
-                            str_temp = regexprep(char(M.sym.rho{s,e}),'xi_([0-9]+)','xi($1)');
-                            str_temp = regexprep(str_temp,'/','./');
+                            str_temp = regexprep(replace_by_bsxfun(char(M.sym.rho{s,e})),'xi_([0-9]+)','xi($1)');
                             str_temp = regexprep(str_temp,'\^','.^');
                             str_temp = regexprep(str_temp,'x_([0-9]+)','x(:,$1)');
                             str_rho = strcat(str_rho,str_temp);
                             str_rho = [str_rho '];'];
                             
+                            % derivative
                             str_drhodxi = strcat(str_drhodxi,getStrDerivative2Terms(M.sym.rho{s,e},x,dxdxi,xi));
-                            str_drhodxi = regexprep(str_drhodxi,'\/','./');
                             str_drhodxi = regexprep(str_drhodxi,'\^','.^');
                             str_drhodxi = [str_drhodxi, ';'];
                             
@@ -869,14 +855,9 @@ str_dzdxi = 'bsxfun(@plus, [';
 %% first term of the derivative
 first_expr = jacobian(sym_expr,x)*dxdxi;
 for k = 1:length(first_expr)
-    if ~isempty(strfind(char(first_expr(k)),'/'))
-        str_temp = regexprep(char(first_expr(k)),'([^/])+/([^/])+','bsxfun(@rdivide, $1, $2)');
-        str_temp = regexprep(str_temp,'x_([0-9]+)','x(:,$1)');
-        str_temp = regexprep(str_temp,'u_([0-9]+)','u(:,$1)');
-    else
-        str_temp = regexprep(char(first_expr(k)),'x_([0-9]+)','x(:,$1)');
-        str_temp = regexprep(str_temp,'u_([0-9]+)','u(:,$1)');
-    end
+    str_temp = replace_by_bsxfun(char(first_expr(k)));
+    str_temp = regexprep(str_temp,'u_([0-9]+)','u(:,$1)');
+    str_temp = regexprep(str_temp,'x_([0-9]+)','x(:,$1)');
     str_dzdxi = strcat(str_dzdxi, regexprep(str_temp,'dxdxi_([0-9]+)','permute(dxdxi($1,:,:),[3,2,1])'));
     if k < length(first_expr)
         str_dzdxi = [str_dzdxi '; '];
@@ -886,8 +867,6 @@ str_dzdxi = [str_dzdxi '],...\n\t '];
 second_expr = jacobian(sym_expr,xi);
 str_dzdxi = strcat(str_dzdxi,replace_xi_x_u(second_expr));
 str_dzdxi = [str_dzdxi ')'];
-
-
 end
 
 function str_dzdxi = getStrDerivative3Terms(deriv_name, sym_expr, s, e,  x, dxdxi, sigma, dsigmadxi, xi)
@@ -896,12 +875,15 @@ str_dzdxi = ['M.' deriv_name '{s,e} = @(t,x,dxdxi,sigma,dsigmadxi,xi,u) bsxfun(@
 %% first term of derivative
 first_expr = jacobian(sym_expr{s,e},x)*dxdxi;
 for k = 1:length(first_expr)
-    if ~isempty(strfind(char(first_expr(k)),'/'))
-        str_temp = regexprep(char(first_expr(k)),'([^/])+/([^/])+','bsxfun(@rdivide, $1, $2)');
-        str_temp = regexprep(str_temp,'x_([0-9]+)','x(:,$1)');
-    else
-        str_temp = regexprep(char(first_expr(k)),'x_([0-9]+)','x(:,$1)');
-    end
+    %     if contains(char(first_expr(k)),'/')
+    %         str_temp = regexprep(char(first_expr(k)),'([^/])+/([^/])+','bsxfun(@rdivide, $1, $2)');
+    %         str_temp = regexprep(str_temp,'x_([0-9]+)','x(:,$1)');
+    %     else
+    %         str_temp = regexprep(char(first_expr(k)),'x_([0-9]+)','x(:,$1)');
+    %     end
+    str_temp = replace_by_bsxfun(char(first_expr(k)));
+    %str_temp = replace_xi_x_u(str_temp);
+    str_temp = regexprep(str_temp,'x_([0-9]+)','x(:,$1)');
     str_dzdxi = strcat(str_dzdxi, regexprep(str_temp,'dxdxi_([0-9]+)','permute(dxdxi($1,:,:),[3,2,1])'));
     if k < length(first_expr)
         str_dzdxi = [str_dzdxi '; '];
@@ -913,11 +895,12 @@ str_dzdxi = [str_dzdxi '],...\n\t'];
 second_expr = jacobian(sym_expr{s,e},sigma)*dsigmadxi;
 str_dzdxi = [str_dzdxi, 'bsxfun(@plus,['];
 for k = 1:length(second_expr)
-    if ~isempty(strfind(char(second_expr(k)),'*'))
-        str_dzdxi= [str_dzdxi,regexprep(char(second_expr(k)),'([^/])+*([^/])+','bsxfun(@times, $1, $2)')];
-    else
-        str_dzdxi = strcat(str_dzdxi, char(second_expr(k)));
-    end
+    %     if contains(char(second_expr(k)),'*')
+    %         str_dzdxi= [str_dzdxi,regexprep(char(second_expr(k)),'([^/])+*([^/])+','bsxfun(@times, $1, $2)')];
+    %     else
+    %         str_dzdxi = strcat(str_dzdxi, char(second_expr(k)));
+    %     end
+    str_dzdxi = replace_by_bsxfun(char(second_expr(k)));
     if k < length(second_expr)
         str_dzdxi = [str_dzdxi '; '];
     end
@@ -926,9 +909,129 @@ str_dzdxi = [str_dzdxi '],...\n\t '];
 
 %% third term
 third_expr = jacobian(sym_expr{s,e},xi);
+
 str_dzdxi = strcat(str_dzdxi,replace_xi_x_u(third_expr));
 str_dzdxi = [str_dzdxi '));'];
 end
 
+function finalstring = replace_by_bsxfun(tmp)
+% This function replaces in the provided equation the operations '*' and
+% '/' by bsxfun.
 
+% split the string in its subparts
+count = 1;
+strs{count}=tmp(1);
+c=2;
+while(c<=length(tmp))
+    if ~(tmp(c)==' ')
+        if tmp(c) == '('
+            idx_next1 = find(ismember(tmp(c+1:end),')'),1,'first');
+            idx_next2 = find(ismember(tmp(c+1:end),'*/('),1,'first');
+            count = count+1;
+            if isempty(idx_next2)||idx_next1 < idx_next2
+                strs{count} = [tmp(c:c+idx_next1)];
+                c = c+idx_next1;
+            else
+                strs{count} = tmp(c);
+            end
+        else
+            if contains('()/*+-',tmp(c))
+                count = count+1;
+                strs{count}=tmp(c);
+            else
+                if contains('()/*+-',strs{count})
+                    count = count+1;
+                    strs{count} = [];
+                end
+                strs{count}=[strs{count},tmp(c)];
+            end
+        end
+    end
+    c=c+1;
+end
+
+idx_div = find(strcmp(strs,'/'));
+idx_mult = find(strcmp(strs,'*'));
+idx_leftbr = find(strcmp(strs,'('));
+idx_rightbr = find(strcmp(strs,')'));
+
+while not(isempty(idx_div) && isempty(idx_mult)) %loop until no / and * are in the string anymore
+    for i = 1:length(idx_div)
+        if not(ismember(idx_div(i)-1,idx_rightbr)||ismember(idx_div(i)+1,idx_leftbr))
+            % can be merged
+            strs{idx_div(i)-1} = ['bsxfun(@rdivide,' strs{idx_div(i)-1}];
+            strs{idx_div(i)} = ',';
+            strs{idx_div(i)+1} = [strs{idx_div(i)+1} ')'];
+        end
+    end
+    for i = 1:length(idx_mult)
+        if not(ismember(idx_mult(i)-1,idx_rightbr)||ismember(idx_mult(i)+1,idx_leftbr))
+            % can be merged
+            strs{idx_mult(i)-1} = ['bsxfun(@times,' strs{idx_mult(i)-1}];
+            strs{idx_mult(i)} = ',';
+            strs{idx_mult(i)+1} = [strs{idx_mult(i)+1} ')'];
+        end
+    end
+    
+    % current indices
+    idx_leftbr = find(strcmp(strs,'('));
+    idx_rightbr = find(strcmp(strs,')'));
+    assert(numel(idx_leftbr) == numel(idx_rightbr))
+    idx_div = find(strcmp(strs,'/'));
+    idx_mult = find(strcmp(strs,'*'));
+    
+    % get bracket pairs
+    if ~isempty(idx_rightbr)
+        count = 1;
+        for i = 1:length(idx_rightbr)
+            tmp = idx_rightbr(i) - idx_leftbr;
+            tmp(tmp<0) = nan;
+            pair(count,:) = [idx_leftbr(tmp==min(tmp)),idx_rightbr(i)];
+            count = count+1;
+        end
+        [~,idx_pair] = min(pair(:,2)-pair(1));
+        
+        % pair closest together
+        pair = pair(idx_pair,:);
+        flag = true;
+        for j = 1:length(idx_div)
+            if idx_div(j) > pair(1) && idx_div(j) < pair(2) % some * or / between the brackets
+                flag = false;
+            end
+        end
+        for j = 1:length(idx_mult)
+            if idx_mult(j) > pair(1) && idx_mult(j) < pair(2) % some * or / between the brackets
+                flag = false;
+            end
+        end
+        if flag % can be merged
+            count = 1;
+            strstmp{1}=[];
+            for j = 1:length(strs)
+                if j >= pair(1) && j <= pair(2)
+                    if length(strstmp) < count || isempty(strstmp{count})
+                        strstmp{count} = strs{j};
+                    else
+                        strstmp{count} = [strstmp{count},strs{j}];
+                    end
+                    if j == pair(2)
+                        count = count+1;
+                    end
+                else
+                    strstmp{count} = strs{j};
+                    count = count+1;
+                end
+            end
+            strs = strstmp;
+            clear strstmp
+        end
+    end
+    % current indices
+    idx_div = find(strcmp(strs,'/'));
+    idx_mult = find(strcmp(strs,'*'));
+    idx_leftbr = find(strcmp(strs,'('));
+    idx_rightbr = find(strcmp(strs,')'));
+end
+finalstring = strcat(strs{1:end});
+end
 
