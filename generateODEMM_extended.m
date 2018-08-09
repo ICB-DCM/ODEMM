@@ -900,7 +900,7 @@ for k = 1:length(second_expr)
     %     else
     %         str_dzdxi = strcat(str_dzdxi, char(second_expr(k)));
     %     end
-    str_dzdxi = replace_by_bsxfun(char(second_expr(k)));
+    str_dzdxi = strcat(str_dzdxi,replace_by_bsxfun(char(second_expr(k))));
     if k < length(second_expr)
         str_dzdxi = [str_dzdxi '; '];
     end
