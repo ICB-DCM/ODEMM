@@ -922,6 +922,11 @@ function finalstring = replace_by_bsxfun(tmp)
 count = 1;
 strs{count}=tmp(1);
 c=2;
+
+if contains(tmp,{'log','sin','cos','tan','tanh'})
+    error('Function included which is not provided yet')
+end    
+    
 while(c<=length(tmp))
     if ~(tmp(c)==' ')
         if tmp(c) == '('
