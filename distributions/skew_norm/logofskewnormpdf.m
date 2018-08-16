@@ -1,6 +1,6 @@
 function varargout = logofskewnormpdf(varargin)
-% logf: d x 1 
-% dlogf: n_xi x d
+% logf: 
+% dlogf: 
 %
 y = varargin{1};
 mu = varargin{2};
@@ -14,14 +14,23 @@ if nargout >= 2
     n_xi = size(dmudxi,2);    
 end
 
+
+n = size(y,1);
+
 Omega = Sigma + delta*delta';
-invOmega = inv(Omega);
+invOmega = inv(Omega); 
+
 a = (1-delta'*invOmega*delta)^(-1/2);
 alpha = delta'*invOmega*a;
 
+try
+    normcdf((alpha*(y-mu)')')
+catch
+   disp('here')
+end
+
 if nargout < 2
-    %log(mynormcdf(alpha*(y-mu)))'
-    logf = log(2) + logofmvnpdf(y,mu,Omega)+ log(normcdf(alpha*(y-mu)))';
+    logf = log(2) + logofmvnpdf(y,mu,Omega) + log(normcdf((alpha*(y-mu)')'));
 else
     dalphadxi = nan(n_xi,d);
     for i = 1:n_xi
@@ -36,15 +45,16 @@ else
             delta'*invOmega*dadxi(i);
     end
     [temp1,dlogofmvnpdfdxi]=logofmvnpdf(y,mu,Omega,dmudxi,dOmegadxi);
-    logf = log(2) + temp1+ log(normcdf(alpha*(y-mu)))';
+    logf = log(2) + temp1 + log(normcdf((alpha*(y-mu)')'));
 end
+
 
 varargout{1}=logf;
 if nargout >= 2
-    dlogf = nan(n_xi,1);
+    dlogf = nan(n_xi,n);
     for i = 1:n_xi
-        dlogf(i) = 1./normcdf(alpha*(y-mu))*mvnpdf(alpha*(y-mu))*...
-            (alpha*(-dmudxi(:,i))+(y-mu)'*dalphadxi(i,:)');
+        dlogf(i,:) = 1./normcdf((alpha*(y-mu)')')'.*normpdf((alpha*(y-mu)')).*...
+            (alpha*(-dmudxi(:,i))+(dalphadxi(i,:)*(y-mu))');
     end
     dlogf = dlogf + dlogofmvnpdfdxi; 
     varargout{2}=dlogf;
