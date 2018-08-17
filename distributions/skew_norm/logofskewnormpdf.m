@@ -22,12 +22,7 @@ invOmega = inv(Omega);
 
 a = (1-delta'*invOmega*delta)^(-1/2);
 alpha = delta'*invOmega*a;
-
-try
-    normcdf((alpha*(y-mu)')')
-catch
-   disp('here')
-end
+assert(real(eig(Sigma))>0)
 
 if nargout < 2
     logf = log(2) + logofmvnpdf(y,mu,Omega) + log(normcdf((alpha*(y-mu)')'));
