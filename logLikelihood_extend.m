@@ -210,9 +210,9 @@ for e = I % Loop: Experimental conditions
                         Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
                         delta{s} = M.delta{s,e}(D(e).t,X,nu{s},xi,u_dse);
                     case 'skew_norm'
-                        Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
-                        mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
-                        delta{s} = M.delta{s,e}(D(e).t,X,nu{s},xi,u_dse);
+                        delta{s} = M.delta{s,e}(D(e).t,X,xi,u_dse);
+                        Sigma{s} = M.Sigma{s,e}(D(e).t,X,delta{s},xi,u_dse);
+                        mu{s} = M.mu{s,e}(D(e).t,X,delta{s},xi,u_dse);
                     otherwise
                         error(['Check distribution assumption, provided assumption ''' ...
                              M.distribution{s,e} ''' not covered. Only '...
@@ -274,14 +274,11 @@ for e = I % Loop: Experimental conditions
                                 dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                                 dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                             case 'skew_t'
-                                %nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
-                                %mu{s} = M.mu{s,e}(D(e).t,X,xi,u_dse);
-                                %Sigma{s} = M.Sigma{s,e}(D(e).t,X,nu{s},xi,u_dse);
-                                %delta{s} = M.delta{s,e}(D(e).t,X,nu{s},xi,u_dse);
+                                error('')
                             case 'skew_norm'
-                                Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
-                                mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
-                                delta{s} = M.delta{s,e}(D(e).t,X,nu{s},xi,u_dse);
+                                ddeltadxi{s} = M.ddeltadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
+                                dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},delta{s},ddeltadxi{s},xi,u_dse);
+                                dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},delta{s},ddeltadxi{s},xi,u_dse);
                         end
                         dwdxi{s} = M.dwdxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                     end % time loop
@@ -377,6 +374,14 @@ for e = I % Loop: Experimental conditions
                                         dmudxi{s}(k,:),permute(dSigmadxi{s}(k,:,:,:),[3,4,1,2]),dnudxi{s}(k,:));
                                     H(:,:,s) = bsxfun(@plus,dwdxi{s}(k,:),w{s}(k)*dqdxi');
                                 end
+                            case 'skew_norm'
+                                if nargout<2
+                                    q(:,s) = logofskewnormpdf(y,mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),delta{s});
+                                else
+                                    [q(:,s),dqdxi] = logofskewnormpdf(y,mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),delta{s},...
+                                        dmudxi{s}(k,:),permute(dSigmadxi{s}(k,:,:,:),[3,4,1,2]),ddeltadxi{s});
+                                    H(:,:,s) = bsxfun(@plus,dwdxi{s}(k,:),w{s}(k)*dqdxi');
+                                end
                         end % distribution
                         w_s = [w_s,w{s}(k)];
                     else % not robust, not recommended
@@ -458,7 +463,11 @@ for e = I % Loop: Experimental conditions
                 if options.use_robust
                     if nargout >= 2
                         [logp,dlogpdxi]= computeMixtureProbability(w_s,q,H) ;
-                        dlogL = dlogL + sum(dlogpdxi)';
+                        if size(dlogpdxi,1)>1
+                            dlogL = dlogL + sum(dlogpdxi)';
+                        else
+                            dlogL = dlogL + dlogpdxi';
+                        end
                     elseif nargout <= 1
                         logp = computeMixtureProbability(w_s,q) ;
                     end
@@ -484,7 +493,7 @@ else
     if options.negLogLikelihood
         varargout{1} =  -J;
     else
-        varargout{1} =  J;
+        varargout{1} =  J; 
     end
 end
 if nargout >=2
@@ -498,7 +507,7 @@ if nargout >=2
         if options.negLogLikelihood
             varargout{2} =  -dlogL;
         else
-            varargout{2} =  dlogL;
+            varargout{2} =  dlogL; 
         end
     end
     
