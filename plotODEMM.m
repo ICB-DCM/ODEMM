@@ -137,7 +137,10 @@ for e = options.I
 end
 if options.hold_on
     fh = options.fh;
-    fhm = options.fhm;
+    try
+        fhm = options.fhm;
+    catch
+    end
 end
 %% simulate conditions
 if ~isempty(M)
@@ -389,7 +392,7 @@ end
 end
 
 function [] = evalModel(xi,M,D,e,r,d,X_c,options,conditions)
-global w mu sigma Sigma nu rho tau
+global w mu sigma Sigma nu rho tau delta
 for s = 1:M.n_subpop
     u_dse = [D(e).u(:,d);M.u{s,e}];
     t_ind = find(conditions(D(e).c(s,d)).time==D(e).t);
@@ -412,7 +415,8 @@ for s = 1:M.n_subpop
             X(:,D(e).n_dim+n) = covscale(n)*Z(:,D(e).n_dim+n);
         end
     end
-    if D(e).n_dim == 1 && ~strcmp(M.distribution{s,e},'students_t')
+    if D(e).n_dim == 1 && ~strcmp(M.distribution{s,e},'students_t') && ...
+         ~strcmp(M.distribution{s,e},'skew_norm')
         switch M.distribution{s,e}
             case {'norm', 'logn', 'logn_median', 'logn_mean'}
                 sigma{s} = M.sigma{s,e}(D(e).t,X,xi,u_dse);
@@ -432,6 +436,10 @@ for s = 1:M.n_subpop
                 nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
                 Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
                 mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
+            case 'skew_norm'
+                delta{s} = M.delta{s,e}(D(e).t,X,xi,u_dse);
+                Sigma{s} = M.Sigma{s,e}(D(e).t,X,delta{s},xi,u_dse);
+                mu{s} = M.mu{s,e}(D(e).t,X,delta{s},xi,u_dse);
             otherwise
                 error('Invalid distribution assumption')
         end
@@ -569,7 +577,7 @@ end
 
 
 function [] = evalPdf(M,D,e,d,k,options,legendflag,ind,lim,hists,grids,plotModel,plotData)
-global w mu sigma Sigma nu rho tau
+global w mu sigma Sigma nu rho tau delta
 y_min = lim.y_min;
 y_max = lim.y_max;
 y_hist = hists.y_hist;
@@ -633,6 +641,9 @@ if ~isempty(M)
                 case 'neg_binomial'
                     p = p + w{s}(k)*exp(logofnbinpdf(y_grid,tau{s}(k),rho{s}(k)));
                     p_s{s} = w{s}(k)*exp(logofnbinpdf(y_grid,tau{s}(k),rho{s}(k)));
+                case 'skew_norm'
+                    p = p + w{s}(k)*exp(logofskewnormpdf(y_grid,mu{s}(k),Sigma{s}(k),delta{s}));
+                    p_s{s} = w{s}(k)*exp(logofskewnormpdf(logofskewnormpdf(y,mu{s}(k),Sigma{s}(k),delta{s}),mu{s}(k),Sigma{s}(k),delta{s}));
             end
         end
     else
@@ -646,6 +657,8 @@ if ~isempty(M)
                     P =  P + w{s}(k)*reshape(mvnpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1])),size(Y1));
                 case {'students_t'}
                     P =  P + w{s}(k)*reshape(exp(logofmvtpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),nu{s}(k)),size(Y1)));
+               case {'skew_norm'}
+                    P =  P + w{s}(k)*reshape(exp(logofskewnormpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),delta{s}),size(Y1)));
             end
         end
     end
@@ -691,7 +704,7 @@ if ~isempty(M) && plotModel
                             end
                         end
                         legendhandles.model = plot(y_grid,p*d_y_hist,'-','color',...
-                            options.model.col{e},'linewidth',options.model.lw,  'linestyle',options.model.ls);
+                            options.model.col{e},'linewidth',options.model.lw,'linestyle',options.model.ls);
                     case 'log'
                         if options.model.subpopulations
                             for s = 1:M.n_subpop
