@@ -140,6 +140,8 @@ sigma = sym('sigma');
 dsigmadxi = sym('dsigmadxi');
 rho = sym('rho');
 drhodxi = sym('drhodxi');
+delta = sym('delta');
+ddeltadxi = sym('ddeltadxi');
 
 for i = 1:dimension_all
     x(i) = sym(['x_' num2str(i,'%d')]);
@@ -228,10 +230,15 @@ for e = 1:length(D)
                         if options.measurement_noise
                             error('to do: neg binomial with measurement noise?')
                         else
-                            M.sym.rho{s,e} = 1-x(1)/x(2);
+                            M.sym.rho{s,e} = x(1)/x(2);
                         end
                     case 'students_t'
                         M.sym.nu{s,e} = 10.^xi(nu_ind)*ones(size(D(e).t(:)));
+                        if options.measurement_noise
+                            error('to do: student t measurement noise')
+                        end
+                    case 'skew_norm'
+                        %M.sym.delta{s,e} = M.sym.delta{s,e};
                         if options.measurement_noise
                             error('to do: student t measurement noise')
                         end
@@ -247,7 +254,9 @@ for e = 1:length(D)
             case 'logn_mean'
                 M.sym.mu{s,e} = log(x(1))-(sigma.^2)/2;
             case 'neg_binomial'
-                M.sym.tau{s,e} = (1-rho).*x(1)./rho;
+                M.sym.tau{s,e} = rho.*x(1)./(1-rho);
+            case 'skew_norm'
+                M.sym.mu{s,e} = x(1)-sqrt(2/pi)*delta;
         end
     end
 end
@@ -299,7 +308,7 @@ for s = 1:M.n_subpop
                     str_dwdxi = strcat(str_dwdxi,';');
                 end
         end
-        if D(e).n_dim == 1 || strcmp(M.distribution{s,e},'students_t')
+        if D(e).n_dim == 1 || strcmp(M.distribution{s,e},'students_t') || strcmp(M.distribution{s,e},'skew_norm') 
             switch M.distribution{s,e}
                 case {'norm','logn_mean','logn_median','students_t'}
                     %% mu
@@ -309,7 +318,16 @@ for s = 1:M.n_subpop
                     str_mu = strcat(str_mu,regexprep(str_temp,'x_([0-9]+)','x(:,$1)'));
                     str_mu = [str_mu '];'];
                     %% dmudxi
-                    str_dmudxi = getStrDerivative3Terms('dmudxi',M.sym.mu,s,e,x,dxdxi,sigma,dsigmadxi,xi);
+                    str_dmudxi = getStrDerivative3Terms('dmudxi',M.sym.mu,s,e,x,dxdxi,sigma,dsigmadxi,xi,'sigma');
+               case {'skew_norm'}
+                    %% mu
+                    str_mu =['M.mu{s,e} = @(t,x,delta,xi,u) ['];
+                    str_temp = regexprep(char(M.sym.mu{s,e}),'xi_([0-9]+)','xi($1)');
+                    str_temp = regexprep(str_temp,'\^','.^');
+                    str_mu = strcat(str_mu,regexprep(str_temp,'x_([0-9]+)','x(:,$1)'));
+                    str_mu = [str_mu '];'];
+                    %% dmudxi
+                    str_dmudxi = getStrDerivative3Terms('dmudxi',M.sym.mu,s,e,x,dxdxi,delta,ddeltadxi,xi,'delta');
                 case 'neg_binomial'
                     %% tau
                     str_tau =['M.tau{s,e} = @(t,x,rho,xi,u) ['];
@@ -320,7 +338,9 @@ for s = 1:M.n_subpop
                     str_tau = strcat(str_tau,regexprep(str_temp,'x_([0-9]+)','x(:,$1)'));
                     str_tau = [str_tau '];'];
                     %% dtaudxi
-                    str_dtaudxi = 'M.dtaudxi{s,e} = @(t,x,dxdxi,rho,drhodxi,xi,u) bsxfun(@times,rho.^(-2), bsxfun(@times,permute(dxdxi(1,:,:),[3,2,1]),rho.*(1-rho))-bsxfun(@times,x(:,1),drhodxi));';
+                    str_dtaudxi = getStrDerivative3Terms('dtaudxi', M.sym.tau, ...
+                        s, e,  x, dxdxi, rho, drhodxi, xi, 'rho');
+                    %str_dtaudxi = 'M.dtaudxi{s,e} = @(t,x,dxdxi,rho,drhodxi,xi,u) bsxfun(@times,rho.^(-2), bsxfun(@times,permute(dxdxi(1,:,:),[3,2,1]),rho.*(1-rho))-bsxfun(@times,x(:,1),drhodxi));';
             end
         else % multivariate
             %% mu
@@ -382,7 +402,7 @@ for s = 1:M.n_subpop
         end
         
         %% dsigma dsigmadxi
-        if D(e).n_dim > 1 || strcmp(M.distribution{s,e},'students_t')
+        if D(e).n_dim > 1 || strcmp(M.distribution{s,e},'students_t') || strcmp(M.distribution{s,e},'skew_norm')
             switch M.sim_type
                 case {'HO','MCM'}
                     switch M.distribution{s,e}
@@ -457,16 +477,52 @@ for s = 1:M.n_subpop
                                 str_dsigmadxi = ['M.dSigmadxi{s,e} = @(t,x,dxdxi,xi,u) func_dSigmadxi_' M.distribution{s,e} '(t,x,dxdxi,xi,' num2str(D(e).n_dim) ');'];
                             end
                             if strcmp(M.distribution{s,e},'students_t')
-                                
-                                %% w
                                 str_nu =['M.nu{s,e} = @(t,x,xi,u) '];
                                 str_nu = strcat(str_nu,strcat(replace_xi_x_u(M.sym.nu{s,e}),';'));
-                                %% dwdxi
                                 str_dnudxi = strcat(['M.dnudxi{s,e} = @(t,x,dxdxi,xi,u)'], getStrDerivative2Terms(M.sym.nu{s,e}, x, dxdxi, xi));
                                 str_dnudxi = [str_dnudxi, ';'];
                                 str_dnudxi = regexprep(str_dnudxi,'u_([0-9]+)','u($1)');
-                                
                             end
+                        case 'skew_norm'
+                            if options.measurement_noise
+                                str_noise = '[';
+                                for k = 1:D(e).n_dim
+                                    str_noise = strcat(str_noise,regexprep(char(M.sym.sigma_noise{e}(k).^2),'xi_([0-9]+)','xi($1)'));
+                                    str_noise = regexprep(str_noise,'u_([0-9]+)','u($1)');
+                                    if k < D(e).n_dim
+                                        str_noise = [str_noise ';'];
+                                    else
+                                        str_noise = [str_noise ']'];
+                                    end
+                                end
+                                str_dnoisedxi = '[';
+                                M.sym.dnoisedxi{e} = jacobian(M.sym.sigma_noise{e}.^2,xi);
+                                for l = 1:D(e).n_dim
+                                    for k = 1:length(M.sym.dnoisedxi{e})
+                                        str_dnoisedxi = strcat(str_dnoisedxi,regexprep(char(M.sym.dnoisedxi{e}(l,k)),'xi_([0-9]+)','xi($1)'));
+                                        str_dnoisedxi = regexprep(str_dnoisedxi,'u_([0-9]+)','u($1)');
+                                        if k<size(M.sym.dnoisedxi{e},2)
+                                            str_dnoisedxi = [str_dnoisedxi ','];
+                                        elseif k==size(M.sym.dnoisedxi{e},2) && l < D(e).n_dim
+                                            str_dnoisedxi = [str_dnoisedxi ';...\n'];
+                                        elseif k==size(M.sym.dnoisedxi{e},2) && l == D(e).n_dim
+                                            str_dnoisedxi = [str_dnoisedxi ']'];
+                                        end
+                                    end
+                                end
+                                str_sigma = ['M.Sigma{s,e} = @(t,x,delta,xi,u) func_Sigma_skew_norm(t,x,delta,xi,' num2str(D(e).n_dim)...
+                                    ',' str_noise ',''' options.noise_model ''');'];
+                                str_dsigmadxi = ['M.dSigmadxi{s,e} = @(t,x,dxdxi,delta,ddeltadxi,xi,u) func_dSigmadxi_skew_norm(t,x,dxdxi,delta,ddeltadxi,xi,' num2str(D(e).n_dim)...
+                                    ',' str_noise ',' str_dnoisedxi ',''' options.noise_model ''');'];
+                            else
+                                str_sigma = ['M.Sigma{s,e} = @(t,x,delta,xi,u) func_Sigma_skew_norm(t,x,delta,xi,' num2str(D(e).n_dim) ');'];
+                                str_dsigmadxi = ['M.dSigmadxi{s,e} = @(t,x,dxdxi,delta,ddeltadxi,xi,u) func_dSigmadxi_skew_norm(t,x,dxdxi,delta,ddeltadxi,xi,' num2str(D(e).n_dim) ');'];
+                            end
+                            str_delta =['M.delta{s,e} = @(t,x,xi,u) '];
+                            str_delta = strcat(str_delta,strcat(replace_xi_x_u(M.sym.delta{s,e}),';'));
+                            str_ddeltadxi = strcat(['M.ddeltadxi{s,e} = @(t,x,dxdxi,xi,u)'], getStrDerivative2Terms(M.sym.delta{s,e}, x, dxdxi, xi));
+                            str_ddeltadxi = [str_ddeltadxi, ';'];
+                            str_ddeltadxi = regexprep(str_ddeltadxi,'u_([0-9]+)','u($1)');
                     end
                 case 'RRE'
                     if size(D(e).u,2) == 1
@@ -531,7 +587,6 @@ for s = 1:M.n_subpop
                         str_sigma = strcat(str_sigma,';');
                         str_dsigmadxi = strcat(str_dsigmadxi,';');
                     end
-                    
             end
         else
             switch M.distribution{s,e}
@@ -670,6 +725,8 @@ for s = 1:M.n_subpop
                     end
                 case 'students_t'
                     error('case should be covered with ndim>1')
+                case 'skew_norm'
+                    error('case should be covered with ndim>1')
                 otherwise
                     error(['Check distribution assumption, provided assumption ''' ...
                         M.distribution{s,e} ''' not covered. Only '...
@@ -724,7 +781,11 @@ for s = 1:M.n_subpop
         fprintf(fid,[str_varind '\n']);
         fprintf(fid,[str_wind '\n']);
         switch M.distribution{s,e}
-            case {'norm','logn_median','logn_mean','students_t'}
+            case {'norm','logn_median','logn_mean','students_t','skew_norm'}
+                if strcmp( M.distribution{s,e},'skew_norm')
+                    fprintf(fid,[str_delta '\n']);
+                    fprintf(fid,[str_ddeltadxi '\n\n']);
+                end
                 fprintf(fid,[str_mu '\n']);
                 fprintf(fid,[str_dmudxi '\n\n']);
                 fprintf(fid,[str_sigma '\n']);
@@ -869,20 +930,46 @@ str_dzdxi = strcat(str_dzdxi,replace_xi_x_u(second_expr));
 str_dzdxi = [str_dzdxi ')'];
 end
 
-function str_dzdxi = getStrDerivative3Terms(deriv_name, sym_expr, s, e,  x, dxdxi, sigma, dsigmadxi, xi)
+% function str_dzdxi = getStrDerivative3Terms(deriv_name, sym_expr, s, e,  x, dxdxi, sigma, dsigmadxi, xi)
+% 
+% str_dzdxi = ['M.' deriv_name '{s,e} = @(t,x,dxdxi,sigma,dsigmadxi,xi,u) bsxfun(@plus, ['];
+% %% first term of derivative
+% first_expr = jacobian(sym_expr{s,e},x)*dxdxi;
+% for k = 1:length(first_expr)
+%     str_temp = replace_by_bsxfun(char(first_expr(k)));
+%     str_temp = regexprep(str_temp,'x_([0-9]+)','x(:,$1)');
+%     str_dzdxi = strcat(str_dzdxi, regexprep(str_temp,'dxdxi_([0-9]+)','permute(dxdxi($1,:,:),[3,2,1])'));
+%     if k < length(first_expr)
+%         str_dzdxi = [str_dzdxi '; '];
+%     end
+% end
+% str_dzdxi = [str_dzdxi '],...\n\t'];
+% 
+% %% second term of derivative
+% second_expr = jacobian(sym_expr{s,e},sigma)*dsigmadxi;
+% str_dzdxi = [str_dzdxi, 'bsxfun(@plus,['];
+% for k = 1:length(second_expr)
+%     str_dzdxi = strcat(str_dzdxi,replace_by_bsxfun(char(second_expr(k))));
+%     if k < length(second_expr)
+%         str_dzdxi = [str_dzdxi '; '];
+%     end
+% end
+% str_dzdxi = [str_dzdxi '],...\n\t '];
+% 
+% %% third term
+% third_expr = jacobian(sym_expr{s,e},xi);
+% 
+% str_dzdxi = strcat(str_dzdxi,replace_xi_x_u(third_expr));
+% str_dzdxi = [str_dzdxi '));'];
+% end
 
-str_dzdxi = ['M.' deriv_name '{s,e} = @(t,x,dxdxi,sigma,dsigmadxi,xi,u) bsxfun(@plus, ['];
+function str_dzdxi = getStrDerivative3Terms(deriv_name, sym_expr, s, e,  x, dxdxi, sym_expr2, dsym_expr2dxi, xi, valname)
+
+str_dzdxi = ['M.' deriv_name '{s,e} = @(t,x,dxdxi,', valname ,',d', valname ,'dxi,xi,u) bsxfun(@plus, ['];
 %% first term of derivative
 first_expr = jacobian(sym_expr{s,e},x)*dxdxi;
 for k = 1:length(first_expr)
-    %     if contains(char(first_expr(k)),'/')
-    %         str_temp = regexprep(char(first_expr(k)),'([^/])+/([^/])+','bsxfun(@rdivide, $1, $2)');
-    %         str_temp = regexprep(str_temp,'x_([0-9]+)','x(:,$1)');
-    %     else
-    %         str_temp = regexprep(char(first_expr(k)),'x_([0-9]+)','x(:,$1)');
-    %     end
     str_temp = replace_by_bsxfun(char(first_expr(k)));
-    %str_temp = replace_xi_x_u(str_temp);
     str_temp = regexprep(str_temp,'x_([0-9]+)','x(:,$1)');
     str_dzdxi = strcat(str_dzdxi, regexprep(str_temp,'dxdxi_([0-9]+)','permute(dxdxi($1,:,:),[3,2,1])'));
     if k < length(first_expr)
@@ -892,15 +979,11 @@ end
 str_dzdxi = [str_dzdxi '],...\n\t'];
 
 %% second term of derivative
-second_expr = jacobian(sym_expr{s,e},sigma)*dsigmadxi;
+second_expr = jacobian(sym_expr{s,e},sym_expr2)*dsym_expr2dxi;
 str_dzdxi = [str_dzdxi, 'bsxfun(@plus,['];
 for k = 1:length(second_expr)
-    %     if contains(char(second_expr(k)),'*')
-    %         str_dzdxi= [str_dzdxi,regexprep(char(second_expr(k)),'([^/])+*([^/])+','bsxfun(@times, $1, $2)')];
-    %     else
-    %         str_dzdxi = strcat(str_dzdxi, char(second_expr(k)));
-    %     end
     str_dzdxi = strcat(str_dzdxi,replace_by_bsxfun(char(second_expr(k))));
+
     if k < length(second_expr)
         str_dzdxi = [str_dzdxi '; '];
     end
@@ -912,6 +995,9 @@ third_expr = jacobian(sym_expr{s,e},xi);
 
 str_dzdxi = strcat(str_dzdxi,replace_xi_x_u(third_expr));
 str_dzdxi = [str_dzdxi '));'];
+str_dzdxi = regexprep(str_dzdxi,'x_([0-9]+)','x(:,$1)');
+str_dzdxi = regexprep(str_dzdxi,'\^','.\^');
+
 end
 
 function finalstring = replace_by_bsxfun(tmp)
@@ -923,10 +1009,8 @@ count = 1;
 strs{count}=tmp(1);
 c=2;
 
-if contains(tmp,{'log','sin','cos','tan','tanh'})
-    error('Function included which is not provided yet')
-end    
-    
+initstring = tmp;
+
 while(c<=length(tmp))
     if ~(tmp(c)==' ')
         if tmp(c) == '('
@@ -1038,5 +1122,11 @@ while not(isempty(idx_div) && isempty(idx_mult)) %loop until no / and * are in t
     idx_rightbr = find(strcmp(strs,')'));
 end
 finalstring = strcat(strs{1:end});
+if contains(initstring ,{'log','sin','cos','tan','tanh'})
+    disp('Function included which is not provided yet, please check results carefully:');
+    disp(initstring);
+    disp('has been replaced by')
+    disp(finalstring);
+end
 end
 
