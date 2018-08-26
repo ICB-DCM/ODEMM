@@ -118,7 +118,8 @@ end
 for c = 1:length(conditions)
     if nargout >=2
         try
-            [status,~,~,X_c{c},~,dXdtheta_c{c}] = M.model(conditions(c).time,M.theta(xi,conditions(c).input),conditions(c).input);
+            [status,~,~,X_c{c},~,dXdtheta_c{c}] = M.model(conditions(c).time,...
+                M.theta(xi,conditions(c).input),conditions(c).input);
             dXdtheta_c{c} = permute(dXdtheta_c{c},[2,3,1]);
         catch
             disp('simulation failed')
@@ -376,10 +377,11 @@ for e = I % Loop: Experimental conditions
                                 end
                             case 'skew_norm'
                                 if nargout<2
-                                    q(:,s) = logofskewnormpdf(y,mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),delta{s});
+                                    q(:,s) = logofskewnormpdf(y,mu{s}(k,:),...
+                                        permute(Sigma{s}(k,:,:),[2,3,1]),delta{s});
                                 else
                                     [q(:,s),dqdxi] = logofskewnormpdf(y,mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),delta{s},...
-                                        dmudxi{s}(k,:),permute(dSigmadxi{s}(k,:,:,:),[3,4,1,2]),ddeltadxi{s});
+                                        permute(dmudxi{s}(k,:,:),[3,2,1]),permute(dSigmadxi{s}(k,:,:,:),[3,4,1,2]),ddeltadxi{s});
                                     H(:,:,s) = bsxfun(@plus,dwdxi{s}(k,:),w{s}(k)*dqdxi');
                                 end
                         end % distribution
