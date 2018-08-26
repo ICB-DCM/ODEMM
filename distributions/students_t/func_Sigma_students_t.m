@@ -33,7 +33,7 @@ Sigma = zeros(numel(t),n_dim,n_dim);
 for k = 1:numel(t)
     n = n_dim+1;
     for i = 1:n_dim
-        for j = 1:n_dim
+        for j = i:n_dim
             if isequal(i,j)
                 Sigma(k,i,j) = x(k,n)+noise(i);
             else

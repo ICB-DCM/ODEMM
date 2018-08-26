@@ -40,7 +40,7 @@ end
 for k = 1:numel(t)
     n = n_dim+1;
     for i = 1:n_dim
-        for j = 1:n_dim
+        for j = i:n_dim
             if isequal(i,j)
                 dSigmadxi(k,:,i,j) = permute(dxdxi(n,:,k),[3,2,1])+dnoisedxi(i,:);
             else
