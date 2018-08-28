@@ -14,7 +14,6 @@ if nargout >= 2
     n_xi = size(dmudxi,2);    
 end
 
-
 n = size(y,1);
 
 Omega = Sigma + delta*delta';
@@ -22,10 +21,11 @@ invOmega = inv(Omega);
 
 a = (1-delta'*invOmega*delta)^(-1/2);
 alpha = delta'*invOmega*a;
-assert(real(eig(Sigma))>0)
+
+assert(sum(real(eig(Sigma))<0)==0)
 
 if nargout < 2
-    logf = log(2) + logofmvnpdf(y,mu,Omega) + log(normcdf((alpha*(y-mu)')'));
+    logf = log(2) + logofmvnpdf(y,mu,Omega) + logphi((alpha*(y-mu)')');
 else
     dalphadxi = nan(n_xi,d);
     for i = 1:n_xi
@@ -40,16 +40,15 @@ else
             delta'*invOmega*dadxi(i);
     end
     [temp1,dlogofmvnpdfdxi]=logofmvnpdf(y,mu,Omega,dmudxi,dOmegadxi);
-    logf = log(2) + temp1 + log(normcdf((alpha*(y-mu)')'));
+    logf = log(2) + temp1 + logphi((alpha*(y-mu)')');
 end
-
 
 varargout{1}=logf;
 if nargout >= 2
     dlogf = nan(n_xi,n);
     for i = 1:n_xi
-        dlogf(i,:) = 1./normcdf((alpha*(y-mu)')')'.*normpdf((alpha*(y-mu)')).*...
-            (alpha*(-dmudxi(:,i))+(dalphadxi(i,:)*(y-mu))');
+        [~,dlp] = logphi((alpha*(y-mu)')');
+        dlogf(i,:) = dlp'.*(alpha*(-dmudxi(:,i))+(dalphadxi(i,:)*(y-mu)'));
     end
     dlogf = dlogf + dlogofmvnpdfdxi; 
     varargout{2}=dlogf;
