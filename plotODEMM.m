@@ -34,7 +34,7 @@ end
 % Set defaults
 options.type = 'kde';
 options.switch_axes = false;
-options.hold_on = 0;
+options.hold_on = false;
 % model
 options.model.col = 'r';
 options.model.lw  = 2;
@@ -54,6 +54,7 @@ options.data.lw   = 2;
 options.data.bins = 100;
 options.data.edgealpha =0.5;
 options.data.facealpha = 1;
+options.data.plot_scale = 'lin';
 % 2D
 options.data.marker = 'k.';
 options.data.markersize = 1.5;
@@ -304,6 +305,11 @@ for e = options.I
                                         (options.legendflag & d==numel(tu_ind{e})),...
                                         inds(ind),lim,hists,grids,i==2,i==1);
                                 end
+                            elseif options.subplot_lin
+                                subplot(1,numel(tu_ind{e}),d);
+                                evalPdf(M,D,e,tu_ind{e}(d),k,options,...
+                                    (options.legendflag & d==numel(tu_ind{e})),...
+                                    inds(ind),lim,hists,grids,1,0);    
                             else
                                 sx = round(sqrt(numel(tu_ind{e})));
                                 sy = ceil(numel(tu_ind{e})/sx);
@@ -656,9 +662,9 @@ if ~isempty(M)
                 case 'norm'
                     P =  P + w{s}(k)*reshape(mvnpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1])),size(Y1));
                 case {'students_t'}
-                    P =  P + w{s}(k)*reshape(exp(logofmvtpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),nu{s}(k)),size(Y1)));
+                    P =  P + w{s}(k)*reshape(exp(logofmvtpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),nu{s}(k))),size(Y1));
                case {'skew_norm'}
-                    P =  P + w{s}(k)*reshape(exp(logofskewnormpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),delta{s}),size(Y1)));
+                    P =  P + w{s}(k)*reshape(exp(logofskewnormpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),delta{s})),size(Y1));
             end
         end
     end
@@ -678,14 +684,25 @@ if (~options.replicates && ~isempty(D(e).y) && plotData) || ...
                         '-','color',options.data.col{e},'linewidth',options.data.lw); hold on;
             end
         else
-            hs=scatter(log10(y(:,1)),log10(y(:,2)),options.data.markersize,'.'); hold on;
-            set(hs,'MarkerEdgeColor',options.data.col{e});
-            set(hs,'MarkerEdgeAlpha',options.data.edgealpha);
-            [~,kdensity,X1,X2]=kde2d(log10(y));
-            contour(X1,X2,kdensity,options.model.levelsets{e,d},'color',options.model.col{e},...
-                'LineWidth',options.model.level_linewidth); hold on;
-            xlim([log10(y_grid{1}(1)),log10(y_grid{1}(end))]);
-            xlim([log10(y_grid{2}(1)),log10(y_grid{2}(end))]);
+            if strcmp(options.x_scale,'log') 
+                hs=scatter(log10(y(:,1)),log10(y(:,2)),options.data.markersize,'.'); hold on;
+                set(hs,'MarkerEdgeColor',options.data.col{e});
+                set(hs,'MarkerEdgeAlpha',options.data.edgealpha);
+                [~,kdensity,X1,X2]=kde2d(log10(y));
+                contour(X1,X2,kdensity,options.model.levelsets{e,d},'color',options.model.col{e},...
+                    'LineWidth',options.model.level_linewidth); hold on;
+                xlim([log10(y_grid{1}(1)),log10(y_grid{1}(end))]);
+                ylim([log10(y_grid{2}(1)),log10(y_grid{2}(end))]);
+            else
+                hs=scatter(y(:,1),y(:,2),options.data.markersize,'.'); hold on;
+                set(hs,'MarkerEdgeColor',options.data.col{e});
+                set(hs,'MarkerEdgeAlpha',options.data.edgealpha);
+                [~,kdensity,X1,X2]=kde2d(y);
+                contour(X1,X2,kdensity,options.model.levelsets{e,d},'color',options.model.col{e},...
+                    'LineWidth',options.model.level_linewidth); hold on;
+                xlim([y_grid{1}(1),y_grid{1}(end)]);
+                ylim([y_grid{2}(1),y_grid{2}(end)]);
+            end
             box on;
         end
     end
@@ -708,7 +725,8 @@ if ~isempty(M) && plotModel
                     case 'log'
                         if options.model.subpopulations
                             for s = 1:M.n_subpop
-                                legendhandles.subpop = plot(y_grid,p_s{s}.*y_grid*d_y_hist*log(10),'--','color',options.model.col{e},'linewidth',options.model.lw); hold on;
+                                legendhandles.subpop = plot(y_grid,p_s{s}.*y_grid*d_y_hist*log(10),...
+                                    '--','color',options.model.col{e},'linewidth',options.model.lw); hold on;
                             end
                         end
                         legendhandles.model = plot(y_grid,p.*y_grid*d_y_hist*log(10),'-',...
@@ -728,7 +746,8 @@ if ~isempty(M) && plotModel
         set(hs,'MarkerEdgeColor',options.data.col{e});
         set(hs,'MarkerEdgeAlpha',options.data.edgealpha);
         box on;
-        contour(Y1,Y2,P,options.model.levelsets{e,d},'color',options.model.col{e},'LineWidth',options.model.level_linewidth); hold on;
+        contour(Y1,Y2,P,options.model.levelsets{e,d},...
+            'color',options.model.col{e},'LineWidth',options.model.level_linewidth); hold on;
     end
 end
 
@@ -760,9 +779,12 @@ if D(e).n_dim == 1 || ind > 0
         end
     end
 else
-    if plotData
+    if plotData && strcmp(options.x_scale,'log')
         xlim([log10(y_min{e}(1)),log10(y_max{e}(1))]);
         ylim([log10(y_min{e}(2)),log10(y_max{e}(2))]);
+    elseif plotData && strcmp(options.x_scale,'lin')
+        xlim([y_min{e}(1),y_max{e}(1)]);
+        ylim([y_min{e}(2),y_max{e}(2)]);
     end
     if plotModel
         set(gca,'xscale',options.x_scale);
@@ -781,7 +803,7 @@ else
         set(gca,'ydir','reverse');
     end
     if ~options.plainstyle
-        if plotData
+        if plotData && strcmp(options.x_scale,'log')
             xlabel([D(e).measurand{1} ' [log10]']);
             ylabel([D(e).measurand{2} ' [log10]']);
         else
