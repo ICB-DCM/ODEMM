@@ -359,6 +359,7 @@ for s = 1:M.n_subpop
                         s, e,  x, dxdxi, rho, drhodxi, xi, 'rho');
                     %str_dtaudxi = 'M.dtaudxi{s,e} = @(t,x,dxdxi,rho,drhodxi,xi,u) bsxfun(@times,rho.^(-2), bsxfun(@times,permute(dxdxi(1,:,:),[3,2,1]),rho.*(1-rho))-bsxfun(@times,x(:,1),drhodxi));';
                 case 'students_t'
+                    str_mu =['M.mu{s,e} = @(t,x,Sigma,xi,u) ['];
                     for n = 1:D(e).n_dim
                         str_mu = [str_mu 'x(:,' num2str(n) ')'];
                         if n < D(e).n_dim
@@ -368,8 +369,8 @@ for s = 1:M.n_subpop
                         end
                     end
                     %% dmudxi
-                    str_dmudxi = ['M.dmudxi{s,e} = @(t,x,dxdxi,Sigma,dSigmadxi,xi,u) func_dmudxi_' M.distribution{s,e}...
-                        '(t,x,dxdxi,Sigma,dSigmadxi,xi,u,' num2str(D(e).n_dim) ');'];
+                    str_dmudxi = ['M.dmudxi{s,e} = @(t,x,dxdxi,xi,u) func_dmudxi_' M.distribution{s,e}...
+                        '(t,x,dxdxi,xi,u,' num2str(D(e).n_dim) ');'];
             end
         else % multivariate
             %% mu

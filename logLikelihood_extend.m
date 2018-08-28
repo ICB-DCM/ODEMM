@@ -372,7 +372,7 @@ for e = I % Loop: Experimental conditions
                                     q(:,s) = logofmvtpdf(y,mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),nu{s}(k));
                                 else
                                     [q(:,s),dqdxi] = logofmvtpdf(y,mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),nu{s}(k),...
-                                        dmudxi{s}(k,:),permute(dSigmadxi{s}(k,:,:,:),[3,4,1,2]),dnudxi{s}(k,:));
+                                        permute(dmudxi{s}(k,:,:),[3,2,1]),permute(dSigmadxi{s}(k,:,:,:),[3,4,1,2]),dnudxi{s}(k,:));
                                     H(:,:,s) = bsxfun(@plus,dwdxi{s}(k,:),w{s}(k)*dqdxi');
                                 end
                             case 'skew_norm'
