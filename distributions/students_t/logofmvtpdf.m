@@ -32,13 +32,12 @@ function varargout = logofmvtpdf(varargin)
 % Parameters:
 %   varargin:
 %   y: d x n_cells
-%   mu: dx1
+%   mu: d x 1
 %   Sigma: d x d
 %   nu: scalar
 %   dmudxi: d x n_xi
 %   dSigmadxi: d x d x n_xi
 %   dnudxi: 1 x n_xi
-
 
 y = varargin{1};
 mu = varargin{2};
@@ -65,7 +64,7 @@ if d<1
     error(message('stats:mvtpdf:TooFewDimensions'));
 end
 
-yc=y-mu;
+yc=y-mu';
 sz = size(Sigma);
 if sz(1) ~= sz(2)
     error(message('stats:mvtpdf:BadCorrelationNotSquare'));
