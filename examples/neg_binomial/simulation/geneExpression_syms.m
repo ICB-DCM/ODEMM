@@ -1,4 +1,4 @@
-function [model] = onestage_1D_syms()
+function [model] = conversionReaction_syms()
 % This function defines the model of the conversion process with
 % the linear output, which is used for the Reaction Rate Equations
 %
@@ -40,7 +40,6 @@ xdot(1) = (k1+k2)-k3*x1;
 x0 = sym(zeros(size(x)));
 
 x0(1) = k1/k3;
-
 
 %% OBSERVABLES
 

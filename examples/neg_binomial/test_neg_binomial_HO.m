@@ -22,25 +22,11 @@ for i = 1:w*n_data
         D(1).y(1,k,i,:) = nbinrnd((1-rho)/rho*sol.y(k),rho);
     end
 end
-% for i = w*n_data+1:n_data
-%     i
-%     theta_s2(3) = (m_k3+randn(1)*sigma_k3);
-%     sol = simulate_CR_log(t,theta_s2,[]);
-%     D(1).y(1,:,i,:) = exp(sol.y'+randn(size(sol.y'))*sigma_noise);
-%     trajectories(:,i) = exp(sol.y);
-% end
 options_plot.data.bins = 20;
-
-%plotODEMM(D)
-
-%% save data
-%save data/negbin_data D xi_true
-load data/negbin_data D xi_true
-
+save data/negbin_data_HO D xi_true
 %%
 
-parameters.name = {'log_{10}(k_{1})',...
-    'log_{10}(k_{2})','log_{10}(k_3)'};
+parameters.name = {'log_{10}(k_{1})','log_{10}(k_{2})','log_{10}(k_3)'};
 parameters.number = length(parameters.name);
 
 M.n_subpop = 1; %number of subpopulations
@@ -49,9 +35,9 @@ M.model = @(T,theta,u) simulate_onestage_1D(T,theta,[]);
 e=1; % experiment index (only one experiment)
 for s = 1:2
     M.mean_ind{s,e} = [1]; %index of mean in output
-    M.var_ind{s,e} = []; %index of variances in output (empty if RREs used)
+    M.var_ind{s,e} = [2]; %index of variances in output (empty if RREs used)
 end
-M.sim_type = 'RRE';
+M.sim_type = 'HO';
 
 % definition of symbolic parameters required for generateODEMM
 xi = sym(zeros(parameters.number,1));
@@ -73,14 +59,12 @@ r=1; % only one replicate
 M.sym.scaling{r,e} = sym('1');
 M.sym.offset{r,e} = sym('0');
 [conditions,D] = collectConditions(D,M);
-options.dimension = 'univariate'; % 1D-measurements (for getRREsigmas)
+options.dimension = 'univariate'; % 1D-measurements
 
 parameters.min = [-3*ones(3,1)];
 parameters.max = [ 3*ones(3,1)];
 
-options.rhos = 'subpopulation-specific';
-[parameters,conditions,D] = getRRErhos(parameters,conditions,options,D,M);
-M.name = 'test_neg_binomial';
+M.name = 'test_neg_binomial_HO';
 generateODEMM_extended(D,M,parameters,conditions,options);
 eval(['ODEMM_' M.name]);
 
