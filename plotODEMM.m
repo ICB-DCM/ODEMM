@@ -623,8 +623,6 @@ if ~isempty(M)
                     if ind > 0
                         Sigma_temp = permute(Sigma{s}(k,:,:),[2,3,1]);
                         sigma{s}(k) = sqrt(Sigma_temp(ind,ind));
-                    end
-                    if ind > 0
                         p = p + w{s}(k)*pdf('logn',y_grid,mu{s}(k,ind),sigma{s}(k));
                         p_s{s} = w{s}(k)*pdf('logn',y_grid,mu{s}(k,ind),sigma{s}(k));
                         cp = cp + w{s}(k)*cdf('logn',y_grid,mu{s}(k,ind),sigma{s}(k));
@@ -642,14 +640,32 @@ if ~isempty(M)
                     p_s{s} = w{s}(k)*pdf('norm',y_grid,mu{s}(k),sigma{s}(k));
                     cp = cp + w{s}(k)*cdf('norm',y_grid,mu{s}(k),sigma{s}(k));
                 case 'students_t'
+                    if ind > 0
+                        Sigma_temp = permute(Sigma{s}(k,:,:),[2,3,1]);
+                        sigma2_tmp{s}(k) = Sigma_temp(ind,ind); 
+                    p = p + w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k,ind),sigma2_tmp{s}(k),nu{s}(k)));
+                    p_s{s} = w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k,ind),sigma2_tmp{s}(k),nu{s}(k)));
+                        else
+                    p = p + w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
+                    p_s{s} = w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
+                    end
+                    
                     p = p + w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
                     p_s{s} = w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
                 case 'neg_binomial'
                     p = p + w{s}(k)*exp(logofnbinpdf(y_grid,tau{s}(k),rho{s}(k)));
                     p_s{s} = w{s}(k)*exp(logofnbinpdf(y_grid,tau{s}(k),rho{s}(k)));
                 case 'skew_norm'
-                    p = p + w{s}(k)*exp(logofskewnormpdf(y_grid,mu{s}(k),Sigma{s}(k),delta{s}));
-                    p_s{s} = w{s}(k)*exp(logofskewnormpdf(logofskewnormpdf(y,mu{s}(k),Sigma{s}(k),delta{s}),mu{s}(k),Sigma{s}(k),delta{s}));
+                    if ind > 0
+                        Sigma_temp = permute(Sigma{s}(k,:,:),[2,3,1]);
+                        sigma2_tmp{s}(k) = Sigma_temp(ind,ind);
+                        delta_tmp{s} = delta{s}(ind);
+                        p = p + w{s}(k)*exp(logofskewnormpdf(y_grid,mu{s}(k,ind),sigma2_tmp{s}(k),delta_tmp{s}));
+                        p_s{s} = w{s}(k)*exp(logofskewnormpdf(y,mu{s}(k,ind),sigma2_tmp{s}(k),delta_tmp{s}));
+                    else
+                        p = p + w{s}(k)*exp(logofskewnormpdf(y_grid,mu{s}(k),Sigma{s}(k),delta{s}));
+                        p_s{s} = w{s}(k)*exp(logofskewnormpdf(y,mu{s}(k),Sigma{s}(k),delta{s}));
+                    end
             end
         end
     else
