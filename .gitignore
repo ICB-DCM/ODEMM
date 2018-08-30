@@ -39,3 +39,5 @@ examples/subpopulation_differences/dephosphorylation/plot_subpop_dephoshp_supple
 kstest_2s_2d*
 examples/weighting/*
 examples/robust_geneExpression_2/data/*.mat
+examples/robust_geneExpression_2/results/*
+examples/robust_geneExpression_2/ODEMM*
