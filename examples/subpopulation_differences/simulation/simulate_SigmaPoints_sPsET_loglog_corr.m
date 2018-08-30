@@ -13,6 +13,7 @@ function varargout = simulate_SigmaPoints_sPsET_loglog_corr(t,xi,u)
 %                   xi(5);
 %                   xi(6)];
 
+warning off
 
 estruct.beta = @(xi) [xi(1);
                   xi(2);

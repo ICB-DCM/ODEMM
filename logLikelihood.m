@@ -174,6 +174,7 @@ dlogL = zeros(length(xi),1);
 for e = I % Loop: Experimental conditions
     for d = 1:size(D(e).u,2)
         for r = replicates{e}
+            
             %% get parameters for mixture distribution
             for s = 1:M.n_subpop
                 u_dse = [D(e).u(:,d);M.u{s,e}];
