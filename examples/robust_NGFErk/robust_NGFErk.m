@@ -5,13 +5,13 @@ number_of_previously_used_cores = maxNumCompThreads(1);
 %for iDist = 1:length(distributions)
 load('./data/log_data_PDL');
 
-parameters.max = [6*ones(8,1);... %kinetic
+parameters.max = [6*ones(11,1);... %kinetic
     6*ones(11,1);...%scaling
-    6*ones(9,1); % noise
+    6*ones(6,1); % noise
     1]; % weight
-parameters.min = [-6*ones(8,1);... %kinetic
+parameters.min = [-6*ones(11,1);... %kinetic
     -6*ones(11,1);...%scaling
-    -6*ones(9,1); % noise
+    -6*ones(6,1); % noise
     0]; %
 
 parameters.name = {'log_{10}(k_1)',...
