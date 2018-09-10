@@ -309,7 +309,7 @@ for e = options.I
                                 subplot(1,numel(tu_ind{e}),d);
                                 evalPdf(M,D,e,tu_ind{e}(d),k,options,...
                                     (options.legendflag & d==numel(tu_ind{e})),...
-                                    inds(ind),lim,hists,grids,1,0);    
+                                    inds(ind),lim,hists,grids,1,0);
                             else
                                 sx = round(sqrt(numel(tu_ind{e})));
                                 sy = ceil(numel(tu_ind{e})/sx);
@@ -422,7 +422,7 @@ for s = 1:M.n_subpop
         end
     end
     if D(e).n_dim == 1 && ~strcmp(M.distribution{s,e},'students_t') && ...
-         ~strcmp(M.distribution{s,e},'skew_norm')
+            ~strcmp(M.distribution{s,e},'skew_norm')
         switch M.distribution{s,e}
             case {'norm', 'logn', 'logn_median', 'logn_mean'}
                 sigma{s} = M.sigma{s,e}(D(e).t,X,xi,u_dse);
@@ -642,16 +642,13 @@ if ~isempty(M)
                 case 'students_t'
                     if ind > 0
                         Sigma_temp = permute(Sigma{s}(k,:,:),[2,3,1]);
-                        sigma2_tmp{s}(k) = Sigma_temp(ind,ind); 
-                    p = p + w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k,ind),sigma2_tmp{s}(k),nu{s}(k)));
-                    p_s{s} = w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k,ind),sigma2_tmp{s}(k),nu{s}(k)));
-                        else
-                    p = p + w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
-                    p_s{s} = w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
+                        sigma2_tmp{s}(k) = Sigma_temp(ind,ind);
+                        p = p + w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k,ind),sigma2_tmp{s}(k),nu{s}(k)));
+                        p_s{s} = w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k,ind),sigma2_tmp{s}(k),nu{s}(k)));
+                    else
+                        p = p + w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
+                        p_s{s} = w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
                     end
-                    
-                    p = p + w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
-                    p_s{s} = w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
                 case 'neg_binomial'
                     p = p + w{s}(k)*exp(logofnbinpdf(y_grid,tau{s}(k),rho{s}(k)));
                     p_s{s} = w{s}(k)*exp(logofnbinpdf(y_grid,tau{s}(k),rho{s}(k)));
@@ -679,7 +676,7 @@ if ~isempty(M)
                     P =  P + w{s}(k)*reshape(mvnpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1])),size(Y1));
                 case {'students_t'}
                     P =  P + w{s}(k)*reshape(exp(logofmvtpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),nu{s}(k))),size(Y1));
-               case {'skew_norm'}
+                case {'skew_norm'}
                     P =  P + w{s}(k)*reshape(exp(logofskewnormpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),delta{s})),size(Y1));
             end
         end
@@ -700,7 +697,7 @@ if (~options.replicates && ~isempty(D(e).y) && plotData) || ...
                         '-','color',options.data.col{e},'linewidth',options.data.lw); hold on;
             end
         else
-            if strcmp(options.x_scale,'log') 
+            if strcmp(options.x_scale,'log')
                 hs=scatter(log10(y(:,1)),log10(y(:,2)),options.data.markersize,'.'); hold on;
                 set(hs,'MarkerEdgeColor',options.data.col{e});
                 set(hs,'MarkerEdgeAlpha',options.data.edgealpha);
@@ -807,10 +804,10 @@ else
         set(gca,'yscale',options.x_scale);
     end
     %if ~options.sameplot || mod(e,2)
-        if plotModel
-            xlim([y_min{e}(1),y_max{e}(1)]);
-            ylim([y_min{e}(2),y_max{e}(2)])
-        end
+    if plotModel
+        xlim([y_min{e}(1),y_max{e}(1)]);
+        ylim([y_min{e}(2),y_max{e}(2)])
+    end
     %else
     %    xlim([y_min{e-1}(1),y_max{e-1}(1)]);
     %    ylim([y_min{e-1}(2),y_max{e-1}(2)])
