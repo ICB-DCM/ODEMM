@@ -43,6 +43,7 @@ examples/robust_geneExpression_2/data/*
 examples/robust_geneExpression_2/results/*
 examples/robust_geneExpression_2/ODEMM*
 examples/robust_geneExpression/*
+examples/robust_geneExpression_SP/*
 examples/distributionAssumptions*
 examples/notUpload_*
 evaluateModel.m
