@@ -1,5 +1,5 @@
 % Functions to set font sizes and colors for the visualization
-TextSizes.DefaultAxesFontSize = 6;
+TextSizes.DefaultAxesFontSize = 8;
 TextSizes.DefaultTextFontSize = 8;
 set(0,TextSizes);
 fs = TextSizes.DefaultTextFontSize;
@@ -14,13 +14,18 @@ color.true = [0,0,0];
 
 color.norm = [23,114,170]./255;
 color.skew_norm = [240,172,65]./255;
+color.laplace = [240,172,65]./255;
 color.students_t = [0,129,26]./255;
-%color.students_t = [107,187,103]./255;
+color.cauchy = [0.6350    0.0780    0.1840];
+color.students_t_outlier=[0.4660 0.6740 0.1880]
 
 color.skew_norm_2 = [247,225,170]./255;
+color.laplace_2 = color.skew_norm_2;
 color.students_t_2 = [198,228,159]./255;
+color.cauchy_2 = ([201 61 38 ] + 54)./255;
 
 color.neg_binomial = [171,37,52]./255;
+color.huber = [179, 106, 226]./255;
 
 linestyles.norm = '-';
 linestyles.skew_norm = '-.';

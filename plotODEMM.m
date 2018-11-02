@@ -634,11 +634,11 @@ if ~isempty(M)
                 case 'norm'
                     if ind > 0
                         Sigma_temp = permute(Sigma{s}(k,:,:),[2,3,1]);
-                        sigma{s}(k) = sqrt(Sigma_temp(n));
+                        sigma{s}(k) = sqrt(Sigma_temp(ind,ind));
                     end
-                    p = p + w{s}(k)*pdf('norm',y_grid,mu{s}(k),sigma{s}(k));
-                    p_s{s} = w{s}(k)*pdf('norm',y_grid,mu{s}(k),sigma{s}(k));
-                    cp = cp + w{s}(k)*cdf('norm',y_grid,mu{s}(k),sigma{s}(k));
+                    p = p + w{s}(k)*pdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
+                    p_s{s} = w{s}(k)*pdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
+                    cp = cp + w{s}(k)*cdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
                 case 'students_t'
                     if ind > 0
                         Sigma_temp = permute(Sigma{s}(k,:,:),[2,3,1]);

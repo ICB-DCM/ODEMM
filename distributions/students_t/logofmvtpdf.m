@@ -89,10 +89,17 @@ if nargout>=2
     %dZdxi = dZdxi';
     dlogf = nan(n_xi,n);
     for i = 1:n_xi
-        dSigmaIndxi = -SigmaIn*squeeze(dSigmadxi(:,:,i))*SigmaIn;
+        
+        if length(size(dSigmadxi)) < 3 && size(dSigmadxi,1) == 1
+            tmpdSigmadxi = dSigmadxi(i);
+        else
+            tmpdSigmadxi = squeeze(dSigmadxi(:,:,i));
+        end
+        
+        dSigmaIndxi = -SigmaIn*tmpdSigmadxi*SigmaIn;
         dZdxi(:,i) = -yc'*SigmaIn*dmudxi(:,i) - (dmudxi(:,i)'*SigmaIn*yc)' + sum(yc'.*(dSigmaIndxi*yc)',2);       
         dlogf(i,:) = 0.5*(bsxfun(@plus,(psi((nu+d)/2)-psi(nu/2)-d/nu)*dnudxi(i) ...
-            - trace(SigmaIn*squeeze(dSigmadxi(:,:,i))), ... % n_xi x 1
+            - trace(SigmaIn*tmpdSigmadxi), ... % n_xi x 1
             -(nu+d)./(nu+Z).*dZdxi(:,i) + (Z*(nu+d)-nu*(nu+Z).*log(1+Z./nu))./(nu*(nu+Z))*dnudxi(i)));
     end
     varargout{2} = dlogf;

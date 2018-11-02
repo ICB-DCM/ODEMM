@@ -1,6 +1,6 @@
 % Functions to set font sizes and colors for the visualization
-TextSizes.DefaultAxesFontSize = 6;
-TextSizes.DefaultTextFontSize = 6;
+TextSizes.DefaultAxesFontSize = 8;
+TextSizes.DefaultTextFontSize = 8;
 set(0,TextSizes);
 fs = TextSizes.DefaultTextFontSize;
 

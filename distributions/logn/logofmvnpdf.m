@@ -131,10 +131,16 @@ if nargout >= 2
     dlogf = nan(n_xi,n);
     SigmaIn = inv(Sigma);
     for i = 1:n_xi
-        dSigmaIndxi = -SigmaIn*squeeze(dSigmadxi(:,:,i))*SigmaIn;
+        if length(size(dSigmadxi)) < 3 && size(dSigmadxi,1) == 1
+            tmpdSigmadxi = dSigmadxi(i);
+        else
+            tmpdSigmadxi = squeeze(dSigmadxi(:,:,i));
+        end
+        
+        dSigmaIndxi = -SigmaIn*tmpdSigmadxi*SigmaIn;
         dZdxi(:,i) = -yc'*SigmaIn*dmudxi(:,i) - (dmudxi(:,i)'*SigmaIn*yc)' + sum(yc'.*(dSigmaIndxi*yc)',2);       
         
-        dlogf(i,:) = -0.5*(trace(SigmaIn*squeeze(dSigmadxi(:,:,i)))+dZdxi(:,i))';
+        dlogf(i,:) = -0.5*(trace(SigmaIn*tmpdSigmadxi)+dZdxi(:,i))';
     end
     varargout{2} = dlogf;
 end
