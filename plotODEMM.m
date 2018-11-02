@@ -11,7 +11,7 @@ function varargout = plotODEMM(varargin)
 % Parameters:
 % varargin:
 % * D: data struct
-% * M: model struct 
+% * M: model struct
 % * xi: parameter vector
 % * options: plotting options
 % * fh: figure handle where the plots are added
@@ -278,7 +278,7 @@ for e = options.I
                         evalModel(xi,M,D,e,r,tu_ind{e}(d),X_c,options,conditions);
                     end
                     [lim,hists,grids]=setYminmaxHists(D,e,tu_ind{e}(d),options,inds(ind));
-
+                    
                     if D(e).n_dim == 2 && ~isempty(M)
                         if inds(ind) == 0
                             if options.data.kde
@@ -300,7 +300,7 @@ for e = options.I
                                 evalPdf(M,D,e,tu_ind{e}(d),k,options,...
                                     (options.legendflag & d==numel(tu_ind{e})),...
                                     inds(ind),lim,hists,grids,1,0);
-                            end 
+                            end
                         else
                             if options.subplot_lin
                                 subplot(1,numel(tu_ind{e}),d);
@@ -394,7 +394,7 @@ for s = 1:M.n_subpop
     X(:,1:D(e).n_dim) = bsxfun(@plus,bsxfun(@times,M.scaling{r,e}(xi,u_dse)',Z(:,1:D(e).n_dim)),...
         M.offset{r,e}(xi,u_dse)');
     if ~isempty(M.var_ind{s,e})
-        s_temp= M.scaling{r,e}(xi,u_dse); 
+        s_temp= M.scaling{r,e}(xi,u_dse);
         temp = tril(ones(D(e).n_dim,D(e).n_dim));
         temp(temp==0) = NaN;
         covscale = (s_temp*s_temp').*temp;
@@ -593,16 +593,18 @@ if ~isempty(M)
                         cp = cp + w{s}(k)*cdf('logn',y_grid,mu{s}(k),sigma{s}(k));
                     end
                 case 'norm'
+                case 'norm'
                     if ind > 0
                         Sigma_temp = permute(Sigma{s}(k,:,:),[2,3,1]);
                         sigma{s}(k) = sqrt(Sigma_temp(ind,ind));
+                        p = p + w{s}(k)*pdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
+                        p_s{s} = w{s}(k)*pdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
+                        cp = cp + w{s}(k)*cdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
+                    else
+                        p = p + w{s}(k)*pdf('norm',y_grid,mu{s}(k),sigma{s}(k));
+                        p_s{s} = w{s}(k)*pdf('norm',y_grid,mu{s}(k),sigma{s}(k));
+                        cp = cp + w{s}(k)*cdf('norm',y_grid,mu{s}(k),sigma{s}(k));
                     end
-                    p = p + w{s}(k)*pdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
-                    p_s{s} = w{s}(k)*pdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
-                    cp = cp + w{s}(k)*cdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
-                case 't'
-                    p = p + w{s}(k)*exp(mylogofmvtpdf(y_grid,mu{s}(k),sigma{s}(k),nu{s}));
-                    p_s{s} = w{s}(k)*exp(mylogofmvtpdf(y_grid,mu{s}(k),sigma{s}(k),nu{s}));
             end
         end
     else
