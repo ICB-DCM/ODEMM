@@ -26,7 +26,7 @@ dnoisedxi = zeros(n_dim,numel(xi));
 dSigmadxi = zeros(numel(t),numel(xi),n_dim,n_dim);
 
 noisemodel = 'additive';
-if nargin >= 5 % measurement noise
+if nargin > 5 % measurement noise
     noise = varargin{1};
     dnoisedxi = varargin{2};
     if nargin >=6
