@@ -121,15 +121,15 @@ for c = 1:length(conditions)
             [status,~,~,X_c{c},~,dXdtheta_c{c}] = M.model(conditions(c).time,...
                 M.theta(xi,conditions(c).input),conditions(c).input);
             dXdtheta_c{c} = permute(dXdtheta_c{c},[2,3,1]);
-        catch
-            disp('simulation failed')
+        catch e
+            disp(e.message)
             status = -1;
         end
     else
         try
             [status,~,~,X_c{c}] = M.model(conditions(c).time,M.theta(xi,conditions(c).input),conditions(c).input);
-        catch
-            disp('simulation failed')
+        catch e
+            disp(e.message)
             status = -1;
         end
     end
@@ -198,7 +198,7 @@ for e = I % Loop: Experimental conditions
                         end
                     case 'neg_binomial'
                         rho{s} = M.rho{s,e}(D(e).t,X,xi,u_dse);
-                        assert(sum(rho{s}<0)==0,'negative binomial distribution requires variance to be greater than the mean')
+                        assert(sum(rho{s}>1)==0,'negative binomial distribution requires variance to be greater than the mean')
                         tau{s} = M.tau{s,e}(D(e).t,X,rho{s},xi,u_dse);
                     case 'students_t'
                         nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
@@ -216,8 +216,8 @@ for e = I % Loop: Experimental conditions
                         mu{s} = M.mu{s,e}(D(e).t,X,delta{s},xi,u_dse);
                     otherwise
                         error(['Check distribution assumption, provided assumption ''' ...
-                             M.distribution{s,e} ''' not covered. Only '...
-                             '''neg_binomial'',''students_t'',''logn'',''norm'',''skew_t'',''skew_norm'''])
+                            M.distribution{s,e} ''' not covered. Only '...
+                            '''neg_binomial'',''students_t'',''logn'',''norm'',''skew_t'',''skew_norm'''])
                 end
                 w{s} = M.w{s,e}(D(e).t,X,xi,u_dse);
                 
@@ -258,35 +258,35 @@ for e = I % Loop: Experimental conditions
                                     covscale(n)*dZdtheta(D(e).n_dim+n,:,k)*dthetadxi{s};
                             end
                         end
-                        switch M.distribution{s,e}
-                            case {'logn','logn_median','logn_mean','norm'}
-                                if D(e).n_dim == 1
-                                    dsigmadxi{s} = M.dsigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                                    dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},sigma{s},dsigmadxi{s},xi,u_dse);
-                                else
-                                    dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                                    dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},Sigma{s},dSigmadxi{s},xi,u_dse);
-                                end
-                            case 'neg_binomial'
-                                drhodxi{s} = M.drhodxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                                dtaudxi{s} = M.dtaudxi{s,e}(D(e).t,X,dXdxi{s},rho{s},drhodxi{s},xi,u_dse);
-                            case 'students_t'
-                                dnudxi{s} = M.dnudxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                                dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                                dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                            case 'skew_t'
-                                error('')
-                            case 'skew_norm'
-                                ddeltadxi{s} = M.ddeltadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                                dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},delta{s},ddeltadxi{s},xi,u_dse);
-                                dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},delta{s},ddeltadxi{s},xi,u_dse);
-                        end
-                        dwdxi{s} = M.dwdxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                     end % time loop
+                    switch M.distribution{s,e}
+                        case {'logn','logn_median','logn_mean','norm'}
+                            if D(e).n_dim == 1
+                                dsigmadxi{s} = M.dsigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
+                                dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},sigma{s},dsigmadxi{s},xi,u_dse);
+                            else
+                                dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
+                                dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},Sigma{s},dSigmadxi{s},xi,u_dse);
+                            end
+                        case 'neg_binomial'
+                            drhodxi{s} = M.drhodxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
+                            dtaudxi{s} = M.dtaudxi{s,e}(D(e).t,X,dXdxi{s},rho{s},drhodxi{s},xi,u_dse);
+                        case 'students_t'
+                            dnudxi{s} = M.dnudxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
+                            dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
+                            dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
+                        case 'skew_t'
+                            error('')
+                        case 'skew_norm'
+                            ddeltadxi{s} = M.ddeltadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
+                            dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},delta{s},ddeltadxi{s},xi,u_dse);
+                            dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},delta{s},ddeltadxi{s},xi,u_dse);
+                    end
+                    dwdxi{s} = M.dwdxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                 end % gradient
             end % subpopulation
             
-            % Loop over the time points and 
+            % Loop over the time points and
             for k = 1:length(D(e).t)
                 % get data
                 if options.replicates
@@ -495,7 +495,7 @@ else
     if options.negLogLikelihood
         varargout{1} =  -J;
     else
-        varargout{1} =  J; 
+        varargout{1} =  J;
     end
 end
 if nargout >=2
@@ -509,11 +509,8 @@ if nargout >=2
         if options.negLogLikelihood
             varargout{2} =  -dlogL;
         else
-            varargout{2} =  dlogL; 
+            varargout{2} =  dlogL;
         end
     end
-    
 end
-
-
 
