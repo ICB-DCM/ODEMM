@@ -228,7 +228,7 @@ for e = 1:length(D)
                         end
                     case 'neg_binomial'
                         if options.measurement_noise
-                            error('to do: neg binomial with measurement noise?')
+                            M.sym.rho{s,e} = x(1)/(x(2)+M.sym.sigma_noise{e});
                         else
                             M.sym.rho{s,e} = x(1)/x(2);
                         end
@@ -735,9 +735,32 @@ for s = 1:M.n_subpop
                             str_rho = [str_rho '];'];
                             
                             % derivative
-                            str_drhodxi = strcat(str_drhodxi,getStrDerivative2Terms(M.sym.rho{s,e},x,dxdxi,xi));
-                            str_drhodxi = regexprep(str_drhodxi,'\^','.^');
-                            str_drhodxi = [str_drhodxi, ';'];
+                            %str_drhodxi = strcat(str_drhodxi,getStrDerivative2Terms(M.sym.rho{s,e},x,dxdxi,xi));
+                            %str_drhodxi = regexprep(str_drhodxi,'\^','.^');
+                            %str_drhodxi = regexprep(str_drhodxi,'xi_([0-9]+)','xi($1)');
+                            %str_drhodxi = [str_drhodxi, ';'];
+                            if options.measurement_noise
+                                str_noise = '[';
+                                str_noise = strcat(str_noise,regexprep(char(M.sym.sigma_noise{e}),'xi_([0-9]+)','xi($1)'));
+                                str_noise = regexprep(str_noise,'u_([0-9]+)','u($1)');
+                                str_noise = [str_noise ']'];
+                                
+                                str_dnoisedxi = '[';
+                                M.sym.dnoisedxi{e} = jacobian(M.sym.sigma_noise{e},xi);
+                                for k = 1:length(M.sym.dnoisedxi{e})
+                                    str_dnoisedxi = strcat(str_dnoisedxi,regexprep(char(M.sym.dnoisedxi{e}(k)),'xi_([0-9]+)','xi($1)'));
+                                    str_dnoisedxi = regexprep(str_dnoisedxi,'u_([0-9]+)','u($1)');
+                                    if k<size(M.sym.dnoisedxi{e},2)
+                                        str_dnoisedxi = [str_dnoisedxi ','];
+                                    elseif k==size(M.sym.dnoisedxi{e},2)
+                                        str_dnoisedxi = [str_dnoisedxi ']'];
+                                    end
+                                end
+                                str_drhodxi = ['M.drhodxi{s,e} = @(t,x,dxdxi,xi,u) func_drhodxi(t,x,dxdxi,xi,' ...
+                                    str_noise ',' str_dnoisedxi ',''' options.noise_model ''');'];
+                            else
+                                 str_drhodxi = ['M.drhodxi{s,e} = @(t,x,dxdxi,xi,u) func_drhodxi(t,x,dxdxi,xi);'];
+                            end
                             
                         case 'RRE'
                             str_rho = [str_rho '['];
