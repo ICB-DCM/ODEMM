@@ -251,15 +251,15 @@ for e = I % Loop: Experimental conditions
                                     covscale(n)*dZdtheta(D(e).n_dim+n,:,k)*dthetadxi{s};
                             end
                         end
-                        if D(e).n_dim == 1
-                            dsigmadxi{s} = M.dsigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,D(e).u(:,d));
-                            dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},sigma{s},dsigmadxi{s},xi,D(e).u(:,d));
-                        else
-                            dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,D(e).u(:,d));
-                            dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},Sigma{s},dSigmadxi{s},xi,D(e).u(:,d));
-                        end
-                        dwdxi{s} = M.dwdxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                     end % time loop
+                    if D(e).n_dim == 1
+                        dsigmadxi{s} = M.dsigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,D(e).u(:,d));
+                        dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},sigma{s},dsigmadxi{s},xi,D(e).u(:,d));
+                    else
+                        dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,D(e).u(:,d));
+                        dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},Sigma{s},dSigmadxi{s},xi,D(e).u(:,d));
+                    end
+                    dwdxi{s} = M.dwdxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                 end % gradient
             end % subpopulation
             
