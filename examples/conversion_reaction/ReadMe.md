@@ -2,7 +2,7 @@
 
 This example reproduces the results of the analysis of "Unraveling sources of heterogeneity" of Loos et al., Cell Systems (2018). In this example, models incorporating only the **mean** (model_RRE.m), and models incorporating **mean and variance** (e.g., model_SP_k3.m) are implemented. The latter allow for cell-to-cell variability of certain parameters of the model and incorporate the sigma-point approximation to obtain the statistical properties of the individual subpopulations.
 
-![](../images/cr.jpg "Model for the conversion process.")
+![](../../doc/images/cr.jpg "Model for the conversion process.")
 @image latex "cr.jpg" "Model for the conversion process." width=0.7\textwidth
 
 First, the simulation file needs to be compiled using the MATLAB Toolbox AMICI. This can be done by running
