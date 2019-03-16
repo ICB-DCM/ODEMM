@@ -1,11 +1,12 @@
 old/
-doc/*
+doc/config
+doc/output
 *.csv
 *.eps
 *.fig
 *.pdf
 old_Biopaper/
-notUpload/
+notUpload*
 /examples/two_stage_intrinsic/*
 examples/conversion_reaction/results/results_scprediction_onecell_firsttp.mat
 examples/conversion_reaction/results/results_scprediction_onecell_lasttp.mat
