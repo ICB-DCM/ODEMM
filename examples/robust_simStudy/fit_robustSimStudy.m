@@ -12,6 +12,17 @@ modelnames = {'conversionReaction','diffProteinExpression',...
     'twoStageGeneExpression','diffProteinExpression'};
 distributions = {'norm','skew_norm','students_t','neg_binomial'};
 
+% If folder does not exist, generate it
+if outlierflag
+    if ~(exist('resultsOutlier')==7) 
+        mkdir resultsOutlier
+    end
+else
+    if ~(exist('results')==7)
+        mkdir results
+    end
+end
+
 for m = [1,3,4]
     for it = 1:size(tps,2)
         t = tps{it};

@@ -39,6 +39,11 @@ M{4}.theta = @(xi,u) [10.^xi(1);...
     10.^xi(4)];
 M{4}.w = @(xi,u) u(2)*xi(5)+(1-u(2))*xi(5);
 
+% If folder does not exist, generate it
+if ~(exist('data')==7)
+    mkdir data
+end
+
 %% Simulate means and variances
 m = 4; % example for model number 4
 t = tps{1};

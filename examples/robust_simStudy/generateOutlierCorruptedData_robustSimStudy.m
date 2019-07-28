@@ -10,11 +10,7 @@ modelnames = {'conversionReaction',... % 1D data
     'twoStageGeneExpression',... % 1D data
     'diffProteinExpression'}; % 1D data
 
-n_cells = [50,100,500,1000];
-tps{1}=[0,0.5,1,2,4];
-tps{2}=[0,0.5,2,4];
-tps{3}=[0,0.5,2];
-t = tps{1};
+load_simStudy_settings
 
 % outlierPerc = 0.02;
 % outlierstr = 'outlier2_zeros';
@@ -24,6 +20,11 @@ t = tps{1};
 
 outlierPerc = 0.1;
 outlierstr = 'outlier10_unif';
+
+% If folder does not exist, generate it
+if ~(exist('dataOutlier')==7)
+    mkdir dataOutlier
+end
 
 for m = [1,3,4]
     for it = 1:3

@@ -12,6 +12,17 @@ modelnames = {'conversionReaction','diffProteinExpression',...
     'twoStageGeneExpression','diffProteinExpression'};
 distributions = {'norm','skew_norm','students_t','neg_binomial'};
 
+% If folder does not exist, generate it
+if outlierflag
+    if ~(exist('resultsOutlierNoise')==7) 
+        mkdir resultsOutlierNoise
+    end
+else
+    if ~(exist('resultsNoise')==7)
+        mkdir resultsNoise
+    end
+end
+
 for m = [1,3,4]
     for it = 1:3
         t = tps{it};
@@ -38,7 +49,7 @@ for m = [1,3,4]
                             'cells_' num2str(length(t)) 'tps_' num2str(set) ...
                             'paramset_' distributions{iDist} '.mat'],'file');
                     end
-                    if  checkExist == 0
+                    if checkExist == 0
                         try
                             clear parameters M
                             switch m
