@@ -21,7 +21,7 @@ noise = zeros(n_dim,1);
 noisemodel = 'additive';
 if nargin > 4
     noise = varargin{1};
-    if nargin >5
+    if nargin > 5
         noisemodel = varargin{2};
     end
 end
