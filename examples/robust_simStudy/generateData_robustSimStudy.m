@@ -10,14 +10,13 @@ modelnames = {'conversionReaction',... % 1D data
     'twoStageGeneExpression',... % 1D data
     'diffProteinExpression'}; % 1D data
 
+load_simStudy_settings
+
 % Conversion 
 M{1}.theta = @(xi,u) [u(1)*10.^(u(2)*xi(1)+(1-u(2))*xi(2));...
     10.^xi(3);...
     10.^xi(4)];
 M{1}.w = @(xi,u) u(2)*xi(5)+(1-u(2))*xi(5);
-parametersSets{1} = [-1,-2,-1,-0.5,0.7;...
-    -0.5,-1,-1,-0.5,0.7;...
-    -1,-0.8,-1,0,0.7];
 
 % Birth-death (diffProteinExpression)
 M{2}.theta = @(xi,u) [10.^xi(1);...
@@ -25,9 +24,7 @@ M{2}.theta = @(xi,u) [10.^xi(1);...
     u(1)*10.^(u(2)*xi(4)+(1-u(2))*xi(5));
     10.^xi(6)];
 M{2}.w = @(xi,u) u(2)*xi(7)+(1-u(2))*xi(7);
-parametersSets{2} = [1,1,-1,1,-1,0,0.5;
-    1.1,1.5,0,1.5,1,0,0.3;
-    2,1,1.5,2,1,0,0.2];%[1.7,2.7,2,2,2.7,-1,0.5];
+
 % Two-stage
 M{3}.theta = @(xi,u) [10.^xi(1);
     u(1)*10.^(u(2)*xi(2)+(1-u(2))*xi(3));...
@@ -35,27 +32,16 @@ M{3}.theta = @(xi,u) [10.^xi(1);
     10.^xi(5);
     10.^xi(6)];
 M{3}.w = @(xi,u) u(2)*xi(7)+(1-u(2))*xi(7);
-parametersSets{3} = [1,1,1.3,0,0.5,0,0.3;...
-    1,2,2.3,0.5,1,0,0.2;...
-    2,0.5,1.8,1,1,0.1,0.7];
 
 % Birth-death (diffProteinExpression)
 M{4}.theta = @(xi,u) [10.^xi(1);...
     u(1)*10.^(u(2)*xi(2)+(1-u(2))*xi(3));
     10.^xi(4)];
 M{4}.w = @(xi,u) u(2)*xi(5)+(1-u(2))*xi(5);
-parametersSets{4} = [1,1.2,-1,0,0.5;
-    1.1,1.5,0,0,0.3;
-    2,0.8,1.8,0,0.2];
 
-n_cells = [50,100,500,1000];
-
-tps{1}=[0,0.5,1,2,4];
-tps{2}=[0,0.5,2,4];
-tps{3}=[0,0.5,2];
-t = tps{1};
 %% Simulate means and variances
 m = 4; % example for model number 4
+t = tps{1};
 tsim = linspace(t(1),t(end));
 xi = parametersSets{m}(3,:);
 if m == 1
@@ -108,7 +94,7 @@ ylabel('count')
 
 %% Generate data with SSA
 for m = [1,3,4]
-    for it = 1:size(tps)
+    for it = 1:size(tps,2)
         t = tps{it};
         for ic = 1:4
             for set = 1:3
