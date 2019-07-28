@@ -35,6 +35,7 @@ end
 options.type = 'kde';
 options.switch_axes = false;
 options.hold_on = false;
+options.fs = 8;
 % model
 options.model.col = 'r';
 options.model.lw  = 2;
@@ -68,7 +69,7 @@ options.subplot_lin = false;
 options.plainstyle = false;
 options.legendflag = true;
 options.titleflag = true;
-
+options.y_counts = false;
 % indices for which the data and model should be visualized,
 % the whole data set is visualized if I = []
 options.I = 1:length(D);
@@ -158,7 +159,7 @@ for e = options.I
     clearvars w mu sigma Sigma nu
     r=1;
     %% check plotting case
-    if size(D(e).u,2) == 1 && size(D(e).t,2) >= 1
+    if size(D(e).u,2) <= 1 && size(D(e).t,2) >= 1
         % one dose with (one or more) time points
         plotcase = 'one dose more tps';
     elseif size(D(e).u,2) >= 1 && size(D(e).t,2) == 1
@@ -192,7 +193,7 @@ for e = options.I
                     evalModel(xi,M,D,e,r,d,X_c,options,conditions);
                 end
                 for k=1:numel(tu_ind{e})
-                    [lim,hists,grids]=setYminmaxHists(D,e,tu_ind{e}(d),options,inds(ind),M);
+                    [lim,hists,grids]=setYminmaxHists(D,e,d,options,inds(ind),M);
                     if D(e).n_dim == 2 && ~isempty(M)
                         if inds(ind) == 0
                             if options.data.kde
@@ -263,6 +264,7 @@ for e = options.I
                         if options.subplot_lin
                             view(90,-90);
                         end
+                        set(gca,'FontSize',options.fs,'TickDir','out');
                     end
                     if options.titleflag
                         title(['time ' num2str(D(e).t(tu_ind{e}(k)))]);
@@ -635,10 +637,14 @@ if ~isempty(M)
                     if ind > 0
                         Sigma_temp = permute(Sigma{s}(k,:,:),[2,3,1]);
                         sigma{s}(k) = sqrt(Sigma_temp(ind,ind));
+                        p = p + w{s}(k)*pdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
+                        p_s{s} = w{s}(k)*pdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
+                        cp = cp + w{s}(k)*cdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
+                    else
+                         p = p + w{s}(k)*pdf('norm',y_grid,mu{s}(k),sigma{s}(k));
+                    p_s{s} = w{s}(k)*pdf('norm',y_grid,mu{s}(k),sigma{s}(k));
+                    cp = cp + w{s}(k)*cdf('norm',y_grid,mu{s}(k),sigma{s}(k));
                     end
-                    p = p + w{s}(k)*pdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
-                    p_s{s} = w{s}(k)*pdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
-                    cp = cp + w{s}(k)*cdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
                 case 'students_t'
                     if ind > 0
                         Sigma_temp = permute(Sigma{s}(k,:,:),[2,3,1]);
@@ -839,4 +845,7 @@ if plotModel || D(e).n_dim == 1 || ind > 0
     set(gca,'xscale',options.x_scale);
 end
 
+if options.y_counts
+    set(gca,'ytick',[0:0.1:0.3],'yticklabel',{'0','100','200','300'});
+end
 end
