@@ -37,6 +37,9 @@ kstest_2s_2d*
 *notUpload*
 examples/notUpload_*
 examples/robust_NGFErk/figures/*
-examples/robust_simStudy/*
+examples/robust_simStudy/data/*
+examples/robust_simStudy/dataOutlier/*
+examples/robust_simStudy/results*
+examples/robust_simStudy/ODEMM_*
 evaluateModel.m
 init.mat
