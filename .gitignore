@@ -4,9 +4,6 @@ doc/*
 *.eps
 *.fig
 *.pdf
-old_Biopaper/
-notUpload/
-examples/neg_binomial/data/negbin_data.mat
 /examples/two_stage_intrinsic/*
 examples/conversion_reaction/results/results_scprediction_onecell_firsttp.mat
 examples/conversion_reaction/results/results_scprediction_onecell_lasttp.mat
@@ -17,7 +14,6 @@ examples/ECM_differences_LamColIV_all/*
 examples/ECM_differences_LamColIV_1D/*
 examples/ECM_differences/run_fittings_ECM.m
 examples/ECM_differences/run_profile_ECM.m
-examples/subpopulation_differences/ODEMM*
 examples/subpopulation_differences/ODEMM*
 examples/subpopulation_differences/dephosphorylation/KM14_KM184-187__ResultsFinal_Cells_final.xls
 examples/conversion_reaction/results/cr_scalingstudy*
@@ -38,15 +34,8 @@ install_toolbox.m
 documentationODEMM.md
 examples/subpopulation_differences/dephosphorylation/plot_subpop_dephoshp_supplement.m
 kstest_2s_2d*
-examples/weighting/*
-examples/robust_geneExpression_2/data/*
-examples/robust_geneExpression_2/results/*
-examples/robust_geneExpression_2/ODEMM*
-examples/robust_geneExpression/*
-examples/robust_geneExpression_SP/*
-examples/robust_simStudy/*
-examples/distributionAssumptions*
+*notUpload*
 examples/notUpload_*
+examples/robust_simStudy/*
 evaluateModel.m
-
 init.mat
