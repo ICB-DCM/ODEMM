@@ -36,6 +36,7 @@ examples/subpopulation_differences/dephosphorylation/plot_subpop_dephoshp_supple
 kstest_2s_2d*
 *notUpload*
 examples/notUpload_*
+examples/robust_NGFErk/figures/*
 examples/robust_simStudy/*
 evaluateModel.m
 init.mat

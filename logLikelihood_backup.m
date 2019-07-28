@@ -1,4 +1,4 @@
-function varargout = logLikelihood_extend(xi,M,D,varargin)
+function varargout = logLikelihood(xi,M,D,varargin)
 % This function evaluates the likelihood function for a given model, data
 % and parameter vector.
 %
@@ -78,9 +78,12 @@ function varargout = logLikelihood_extend(xi,M,D,varargin)
 %% Set default options
 options.use_robust = true;
 options.replicates = false;
-%options.logPosterior = false;
 options.negLogLikelihood = false;
 options.simulate_musigma = false;
+options.prior.flag = false;
+options.tau = 1;
+options.individual_weighting = false;
+
 %% Input assignment
 if nargin >= 4
     options = setdefault(varargin{1},options);
@@ -109,27 +112,42 @@ if ~isfield(M,'w_ind')
         end
     end
 end
-
 %% collect all different conditions for the simulations and simulate them
 if nargin < 5 || isempty(conditions)
     [conditions,D] = collectConditions(D,M);
 end
 
 for c = 1:length(conditions)
+    if isinf(M.theta(xi,conditions(c).input)) > 0
+        if options.negLogLikelihood
+            varargout{1} =  Inf;
+            if nargout >=2
+                varargout{2} =  Inf;
+            end
+        else
+            varargout{1} =  -Inf;
+            if nargout >=2
+                varargout{2} =  -Inf;
+            end
+        end
+        return;
+    end
+end
+
+for c = 1:length(conditions)
     if nargout >=2
         try
-            [status,~,~,X_c{c},~,dXdtheta_c{c}] = M.model(conditions(c).time,...
-                M.theta(xi,conditions(c).input),conditions(c).input);
+            [status,~,~,X_c{c},~,dXdtheta_c{c}] = M.model(conditions(c).time,M.theta(xi,conditions(c).input),conditions(c).input);
             dXdtheta_c{c} = permute(dXdtheta_c{c},[2,3,1]);
-        catch e
-            disp(e.message)
+        catch
+            disp('simulation failed')
             status = -1;
         end
     else
         try
             [status,~,~,X_c{c}] = M.model(conditions(c).time,M.theta(xi,conditions(c).input),conditions(c).input);
-        catch e
-            disp(e.message)
+        catch
+            disp('simulation failed')
             status = -1;
         end
     end
@@ -152,10 +170,11 @@ end
 %% Evaluation of likelihood function
 logL = 0;
 dlogL = zeros(length(xi),1);
-
+%try
 for e = I % Loop: Experimental conditions
     for d = 1:size(D(e).u,2)
         for r = replicates{e}
+            
             %% get parameters for mixture distribution
             for s = 1:M.n_subpop
                 u_dse = [D(e).u(:,d);M.u{s,e}];
@@ -174,7 +193,8 @@ for e = I % Loop: Experimental conditions
                     end
                 end
                 % scaling and offset
-                X(:,1:D(e).n_dim) = bsxfun(@plus,bsxfun(@times,M.scaling{r,e}(xi,u_dse)',Z(:,1:D(e).n_dim)),...
+                X(:,1:D(e).n_dim) = bsxfun(@plus,bsxfun(@times,...
+                    M.scaling{r,e}(xi,u_dse)',Z(:,1:D(e).n_dim)),...
                     M.offset{r,e}(xi,u_dse)');
                 if ~isempty(M.var_ind{s,e})
                     s_temp= M.scaling{r,e}(xi,u_dse);
@@ -187,41 +207,15 @@ for e = I % Loop: Experimental conditions
                         X(:,D(e).n_dim+n) = covscale(n)*Z(:,D(e).n_dim+n);
                     end
                 end
-                switch M.distribution{s,e}
-                    case {'logn','logn_median','logn_mean','norm'}
-                        if D(e).n_dim == 1
-                            sigma{s} = M.sigma{s,e}(D(e).t,X,xi,u_dse);
-                            mu{s} = M.mu{s,e}(D(e).t,X,sigma{s},xi,u_dse);
-                        else
-                            Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
-                            mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
-                        end
-                    case 'neg_binomial'
-                        rho{s} = M.rho{s,e}(D(e).t,X,xi,u_dse);
-                        assert(sum(rho{s}>1)==0,'negative binomial distribution requires variance to be greater than the mean')
-                        tau{s} = M.tau{s,e}(D(e).t,X,rho{s},xi,u_dse);
-                    case 'students_t'
-                        nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
-                        Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
-                        mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
-                    case 'skew_t'
-                        error('to check')
-                        nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
-                        mu{s} = M.mu{s,e}(D(e).t,X,xi,u_dse);
-                        Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
-                        delta{s} = M.delta{s,e}(D(e).t,X,nu{s},xi,u_dse);
-                    case 'skew_norm'
-                        delta{s} = M.delta{s,e}(D(e).t,X,xi,u_dse);
-                        Sigma{s} = M.Sigma{s,e}(D(e).t,X,delta{s},xi,u_dse);
-                        mu{s} = M.mu{s,e}(D(e).t,X,delta{s},xi,u_dse);
-                    otherwise
-                        error(['Check distribution assumption, provided assumption ''' ...
-                            M.distribution{s,e} ''' not covered. Only '...
-                            '''neg_binomial'',''students_t'',''logn'',''norm'',''skew_t'',''skew_norm'''])
+                if D(e).n_dim == 1
+                    sigma{s} = M.sigma{s,e}(D(e).t,X,xi,u_dse);
+                    mu{s} = M.mu{s,e}(D(e).t,X,sigma{s},xi,u_dse);
+                else
+                    Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
+                    mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
                 end
                 w{s} = M.w{s,e}(D(e).t,X,xi,u_dse);
-                
-                % Derivatives of distribution parameters
+                % Sensitivities
                 if nargout >= 2
                     dXdxi{s} = zeros(numel([M.mean_ind{s,e},M.var_ind{s,e},M.w_ind{s,e}]),length(xi),length(D(e).t));
                     for k = 1:length(D(e).t)
@@ -259,34 +253,18 @@ for e = I % Loop: Experimental conditions
                             end
                         end
                     end % time loop
-                    switch M.distribution{s,e}
-                        case {'logn','logn_median','logn_mean','norm'}
-                            if D(e).n_dim == 1
-                                dsigmadxi{s} = M.dsigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                                dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},sigma{s},dsigmadxi{s},xi,u_dse);
-                            else
-                                dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                                dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},Sigma{s},dSigmadxi{s},xi,u_dse);
-                            end
-                        case 'neg_binomial'
-                            drhodxi{s} = M.drhodxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                            dtaudxi{s} = M.dtaudxi{s,e}(D(e).t,X,dXdxi{s},rho{s},drhodxi{s},xi,u_dse);
-                        case 'students_t'
-                            dnudxi{s} = M.dnudxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                            dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                            dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                        case 'skew_t'
-                            error('')
-                        case 'skew_norm'
-                            ddeltadxi{s} = M.ddeltadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                            dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},delta{s},ddeltadxi{s},xi,u_dse);
-                            dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},delta{s},ddeltadxi{s},xi,u_dse);
+                    
+                    if D(e).n_dim == 1
+                        dsigmadxi{s} = M.dsigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,D(e).u(:,d));
+                        dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},sigma{s},dsigmadxi{s},xi,D(e).u(:,d));
+                    else
+                        dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,D(e).u(:,d));
+                        dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},Sigma{s},dSigmadxi{s},xi,D(e).u(:,d));
                     end
                     dwdxi{s} = M.dwdxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                 end % gradient
             end % subpopulation
             
-            % Loop over the time points and
             for k = 1:length(D(e).t)
                 % get data
                 if options.replicates
@@ -313,6 +291,7 @@ for e = I % Loop: Experimental conditions
                         switch M.distribution{s,e}
                             case {'logn','logn_median','logn_mean'}
                                 if D(e).n_dim == 1
+                                    temp = cputime;
                                     q(:,s) = logoflognpdf(y,mu{s}(k), sigma{s}(k));
                                     if nargout >= 2
                                         H(:,:,s) = bsxfun(@plus,dwdxi{s}(k,:),w{s}(k)/sigma{s}(k)*...
@@ -320,6 +299,7 @@ for e = I % Loop: Experimental conditions
                                             (((log(y)-mu{s}(k))/sigma{s}(k)).^2-1)*dsigmadxi{s}(k,:)));
                                     end
                                 else % multivariate
+                                    temp = cputime;
                                     q(:,s) = bsxfun(@minus,logofmvnpdf(log(y),mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1])),sum(log(y),2));
                                     if nargout >= 2
                                         if rcond(permute(Sigma{s}(k,:,:),[2 3 1])) < 1e-10
@@ -360,30 +340,6 @@ for e = I % Loop: Experimental conditions
                                         end % xi
                                     end % gradient
                                 end % dimension
-                            case 'neg_binomial'
-                                if nargout<2
-                                    q(:,s) = logofnbinpdf(y,tau{s}(k),rho{s}(k));
-                                else
-                                    [q(:,s),dqdxi] = logofnbinpdf(y,tau{s}(k),rho{s}(k),dtaudxi{s}(k,:),drhodxi{s}(k,:));
-                                    H(:,:,s) = bsxfun(@plus,dwdxi{s}(k,:),w{s}(k)*dqdxi);
-                                end
-                            case 'students_t'
-                                if nargout<2
-                                    q(:,s) = logofmvtpdf(y,mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),nu{s}(k));
-                                else
-                                    [q(:,s),dqdxi] = logofmvtpdf(y,mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),nu{s}(k),...
-                                        permute(dmudxi{s}(k,:,:),[3,2,1]),permute(dSigmadxi{s}(k,:,:,:),[3,4,1,2]),dnudxi{s}(k,:));
-                                    H(:,:,s) = bsxfun(@plus,dwdxi{s}(k,:),w{s}(k)*dqdxi');
-                                end
-                            case 'skew_norm'
-                                if nargout<2
-                                    q(:,s) = logofskewnormpdf(y,mu{s}(k,:),...
-                                        permute(Sigma{s}(k,:,:),[2,3,1]),delta{s});
-                                else
-                                    [q(:,s),dqdxi] = logofskewnormpdf(y,mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),delta{s},...
-                                        permute(dmudxi{s}(k,:,:),[3,2,1]),permute(dSigmadxi{s}(k,:,:,:),[3,4,1,2]),ddeltadxi{s});
-                                    H(:,:,s) = bsxfun(@plus,dwdxi{s}(k,:),w{s}(k)*dqdxi');
-                                end
                         end % distribution
                         w_s = [w_s,w{s}(k)];
                     else % not robust, not recommended
@@ -444,19 +400,6 @@ for e = I % Loop: Experimental conditions
                                         end % xi
                                     end % gradient
                                 end % dimension
-                            case {'neg_binomial'}
-                                p_s = nbinpdf(y,tau{s}(k),rho{s}(k));
-                                p = p + w{s}(k)*p_s;
-                                if nargout >= 2
-                                    dpdxi = dpdxi + p_s.*dwdxi{s}(k,:) +...
-                                        + w{s}(k)*(bsxfun(@times,psi(y+tau{s}(k)),dtaudxi{s}(k,:))-...
-                                        psi(tau{s}(k))*dtaudxi{s}(k) + ...
-                                        dtaudxi{s}(k,:)*log(1-rho{s}(k)) -...
-                                        y/(1-rho{s}(k,:))*drhodxi{s}(k,:)+...
-                                        tau{s}(k)./rho{s}(k).*drhodxi{s}(k,:));
-                                end
-                            case 'student_t'
-                                error('non-robust version for student t not supported')
                         end % distribution
                     end % robust
                 end % subpopulation loop
@@ -465,10 +408,12 @@ for e = I % Loop: Experimental conditions
                 if options.use_robust
                     if nargout >= 2
                         [logp,dlogpdxi]= computeMixtureProbability(w_s,q,H) ;
-                        if size(dlogpdxi,1)>1
-                            dlogL = dlogL + sum(dlogpdxi)';
+                        if options.replicates && options.individual_weighting
+                            dlogL = dlogL + sum(dlogpdxi)'*D(e).replicate(r).weighting(d,k);
+                        elseif ~options.replicates && options.individual_weighting
+                            dlogL = dlogL + sum(dlogpdxi)'*D(e).weighting(d,k);
                         else
-                            dlogL = dlogL + dlogpdxi';
+                            dlogL = dlogL + sum(dlogpdxi)';
                         end
                     elseif nargout <= 1
                         logp = computeMixtureProbability(w_s,q) ;
@@ -479,18 +424,43 @@ for e = I % Loop: Experimental conditions
                         dlogL = dlogL + sum(bsxfun(@times,1./p,dpdxi))';
                     end
                 end
-                logL = logL + sum(logp);
+                if options.replicates && options.individual_weighting
+                    logL = logL + sum(logp).*D(e).replicate(r).weighting(d,k);
+                elseif ~options.replicates && options.individual_weighting
+                    logL = logL + sum(logp).*D(e).weighting(d,k);
+                else
+                    logL = logL + sum(logp);
+                end
             end % time loop
         end % replicates
     end % dose loop
 end % experiment
 
 
+if options.prior.flag
+    switch options.prior.distribution
+        case 'normal'
+            logL = logL - 0.5*nansum(log(2*pi*options.prior.sigma2))-...
+                0.5*nansum((xi-options.prior.mean).^2./options.prior.sigma2);
+            if nargout >=2
+                dlogL = nansum([dlogL,-(xi-options.prior.mean)./options.prior.sigma2],2);
+            end
+        case 'uniform'
+            logL = options.tau*logL - ...
+                nansum(log((options.prior.max-options.prior.min).*(xi>=options.prior.min & ...
+                xi<=options.prior.max)));
+    end
+end
+
+
 J = logL;
+if nargout >= 2
+    dJdxi = dlogL;
+end
 
 %% Output assignment
-if ~isreal(J)
-    error('Likelihood is not real!');
+if ~isfinite(J)
+    varargout{1} =  -Inf;
 else
     if options.negLogLikelihood
         varargout{1} =  -J;
@@ -507,10 +477,13 @@ if nargout >=2
         error('Gradient contains Infs');
     else
         if options.negLogLikelihood
-            varargout{2} =  -dlogL;
+            varargout{2} =  -dJdxi;
         else
-            varargout{2} =  dlogL;
+            varargout{2} =  dJdxi;
         end
     end
+    
 end
+
+
 
