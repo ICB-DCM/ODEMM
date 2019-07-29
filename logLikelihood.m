@@ -208,12 +208,6 @@ for e = I % Loop: Experimental conditions
                         nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
                         Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
                         mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
-                    case 'skew_t'
-                        error('to check')
-                        nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
-                        mu{s} = M.mu{s,e}(D(e).t,X,xi,u_dse);
-                        Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
-                        delta{s} = M.delta{s,e}(D(e).t,X,nu{s},xi,u_dse);
                     case 'skew_norm'
                         delta{s} = M.delta{s,e}(D(e).t,X,xi,u_dse);
                         Sigma{s} = M.Sigma{s,e}(D(e).t,X,delta{s},xi,u_dse);
@@ -221,7 +215,7 @@ for e = I % Loop: Experimental conditions
                     otherwise
                         error(['Check distribution assumption, provided assumption ''' ...
                             M.distribution{s,e} ''' not covered. Only '...
-                            '''neg_binomial'',''students_t'',''logn'',''norm'',''skew_t'',''skew_norm'''])
+                            '''neg_binomial'',''students_t'',''logn'',''norm'',''skew_norm'''])
                 end
                 w{s} = M.w{s,e}(D(e).t,X,xi,u_dse);
                 
@@ -279,8 +273,6 @@ for e = I % Loop: Experimental conditions
                             dnudxi{s} = M.dnudxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                             dmudxi{s} = M.dmudxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                             dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
-                        case 'skew_t'
-                            error('')
                         case 'skew_norm'
                             ddeltadxi{s} = M.ddeltadxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                             dSigmadxi{s} = M.dSigmadxi{s,e}(D(e).t,X,dXdxi{s},delta{s},ddeltadxi{s},xi,u_dse);

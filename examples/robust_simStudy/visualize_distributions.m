@@ -1,3 +1,6 @@
+% Visualizes the distributions for the univariate case. All distributions
+% have the same mean and variance.
+
 clear all
 close all
 clc
@@ -5,10 +8,11 @@ clc
 load_plot_settings_robust
 
 fh = figure;
+m = 50; % mean
+C = 60; % variance
 xgrid = linspace(1,100)';
-m = 50;
-C = 60;
 
+% Normal distribution
 s1 = subplot(1,4,1);
 mu = m;
 Sigma = C;
@@ -22,6 +26,7 @@ s1.FontSize = fs;
 s1.TickDir='out';   
 s1.Position=[0.08,0.2,0.18,0.8];
 
+% Skew normal distribution
 s2 = subplot(1,4,2);
 delta = 0;
 mu = m - sqrt(2/pi)*delta;
@@ -40,11 +45,11 @@ s2.FontSize = fs;
 s2.TickDir='out'; 
 s2.YTickLabel = '';
 s2.Position =  [0.3,0.2,0.18,0.8];
-
 hl1=legend('\delta = 0','\delta = 12');
 legend('boxoff')
 hl1.Position=[0.32,0.9,0.16,0.05];
 
+% Student's t distribution
 s3 = subplot(1,4,3);
 mu = m;
 Sigma = C;
@@ -65,6 +70,7 @@ hl2 = legend('\nu = 100','\nu = 2.1');
 hl2.Position=[0.54,0.9,0.16,0.05];
 legend('boxoff')
 
+% Negative binomial distribution
 s4=subplot(1,4,4);
 rho = m/C;
 tau = rho*m/(1-rho);
@@ -77,5 +83,7 @@ s4.FontSize = fs;
 s4.TickDir='out'; 
 s4.YTickLabel = '';
 s4.Position = [0.74,0.2,0.18,0.8];
+
+% Save figures
 fh.PaperPosition=[0 0 16 4];
 print('-depsc',['./figures/distributions'])

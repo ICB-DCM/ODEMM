@@ -786,10 +786,9 @@ for s = 1:M.n_subpop
                 otherwise
                     error(['Check distribution assumption, provided assumption ''' ...
                         M.distribution{s,e} ''' not covered. Only '...
-                        '''neg_binomial'',''students_t'',''logn'',''norm'',''skew_t'',''skew_norm'''])
+                        '''neg_binomial'',''students_t'',''logn'',''norm'',''skew_norm'''])
             end
         end
-        
         
         str_distribution = ['M.distribution{s,e} = ''' M.distribution{s,e} ''''];
         fprintf(fid,['%% Subpopulation ' num2str(s) ' \n']);

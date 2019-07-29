@@ -1,3 +1,8 @@
+% In this script, the models are fitted for a certain outlier scenario. If
+% outlierflag == false, the no-outlier data is fitted for all distributions
+% and models. Otherwise, the outlier scenario defined in outlierstr is
+% considered. The models account for measurement noise.
+
 clear all
 close all
 clc
@@ -23,6 +28,7 @@ else
     end
 end
 
+% Loop over models. Here only the 1D-models (index 1,3, and 4) are fitted.
 for m = [1,3,4]
     for it = 1:3
         t = tps{it};
@@ -36,8 +42,7 @@ for m = [1,3,4]
                         'cells_' num2str(length(t)) 'tps_' num2str(set) 'paramsetD'],'D')
                 end
                 D(1).u = 1;
-                nDist = 4;
-                for iDist = 4
+                for iDist = 4%1:4
                     if outlierflag
                         checkExist = exist(['./resultsOutlierNoise/results_noise_model' ...
                             num2str(m) '_' modelnames{m} '_' num2str(n_cells(ic)) ...
@@ -95,7 +100,6 @@ for m = [1,3,4]
                                     ind_weight = 5;
                                     ind_noise = 6;
                             end
-                            
                             if strcmp(distributions{iDist},'skew_norm')
                                 if m == 2
                                     parameters.name{end+1} = '\\delta_A';
@@ -106,13 +110,13 @@ for m = [1,3,4]
                             end
                             parameters.number = length(parameters.name);
                             M.n_subpop = 2; %number of subpopulations
-                            eval(['M.model = @(T,theta,u) simulate_model' num2str(m) '_' modelnames{m} '(T,theta,[])']);
+                            eval(['M.model = @(T,theta,u) simulate_model' num2str(m) '_' modelnames{m} '(T,theta,[]);']);
                             
-                            e=1; % experiment index (only one experiment)
+                            e = 1; % experiment index (only one experiment)
                             if m == 1 || m == 3 || m == 4
                                 for s = 1:2
-                                    M.mean_ind{s,e} = [1]; %index of mean in output
-                                    M.var_ind{s,e} = [2]; %index of variances in output (empty if RREs used)
+                                    M.mean_ind{s,e} = 1; %index of mean in output
+                                    M.var_ind{s,e} = 2; %index of variances in output (empty if RREs used)
                                 end
                             else
                                 for s = 1:2
@@ -120,7 +124,7 @@ for m = [1,3,4]
                                     M.var_ind{s,e} = [3,4,5]; %index of variances in output (empty if RREs used)
                                 end
                             end
-                            M.sim_type = 'HO';
+                            M.sim_type = 'HO'; % HO = Higher Order
                             xi = sym(zeros(parameters.number,1));
                             for i = 1:parameters.number
                                 xi(i) = sym(['xi_' num2str(i,'%d')]);
@@ -167,7 +171,8 @@ for m = [1,3,4]
                             % initialize weights
                             M.sym.w{1,e} = xi(ind_weight)*ones(size(D(e).t(:)));
                             M.sym.w{2,e} = (1-xi(ind_weight))*ones(size(D(e).t(:)));
-                            r=1; % only one replicate
+                            r = 1; % only one replicate
+                            % Scaling and offset 
                             if m == 2
                                 M.sym.scaling{r,e} = [sym('1');sym('1')];
                                 M.sym.offset{r,e} = [sym('0');sym('0')];
@@ -175,10 +180,10 @@ for m = [1,3,4]
                                 M.sym.scaling{r,e} = sym('1');
                                 M.sym.offset{r,e} = sym('0');
                             end
-                            M.sym.sigma_noise{e} = [10.^xi(ind_noise)];
+                            % Measurement noise
+                            M.sym.sigma_noise{e} = 10.^xi(ind_noise);
                             
-                            
-                            %% distribution assumption
+                            % Distribution assumption
                             for s = 1:M.n_subpop
                                 M.distribution{s,e} = distributions{iDist};
                             end
@@ -186,15 +191,17 @@ for m = [1,3,4]
                             [conditions,D] = collectConditions(D,M);
                             options.dimension = 'univariate'; % 1D-measurements
                             
+                            % Parameter boundaries
                             parameters.min = -3*ones(parameters.number,1);
                             parameters.min(ind_weight) = 0;
                             parameters.max = 3*ones(parameters.number,1);
                             parameters.max(ind_weight) = 1;
-                            
                             if strcmp(distributions{iDist},'skew_norm')
                                 parameters.min(parameters.number) = -5e2;
                                 parameters.max(parameters.number) = 5e2;
                             end
+                            
+                            % Model name
                             if outlierflag
                                 M.name = ['noise_' M.distribution{1,1} '_' modelnames{m} '_' outlierstr];
                                 if m == 3 && iDist == 4 && strcmp(outlierstr,'outlier5_dublets')
@@ -203,33 +210,42 @@ for m = [1,3,4]
                             else
                                 M.name = ['noise_' M.distribution{1,1} '_' modelnames{m}];
                             end
-                            options.measurement_noise = true;
+                            options.measurement_noise = true; % included noise
                             options.noise_model = 'additive';
-                            generateODEMM_extended(D,M,parameters,conditions,options);
-                            eval(['ODEMM_' M.name ';']);
                             
+                            % Generate and evaluate model file
+                            generateODEMM(D,M,parameters,conditions,options);
+                            eval(['ODEMM_' M.name ';']);
+                            % Parameter boundaries for automatically
+                            % generated degree of freedom in case of the
+                            % Student's t distribution
                             if strcmp(M.distribution{s,e},'students_t')
                                 parameters.max(end) = 8;
                             end
-                            %xi = rand(parameters.number,1);
-                            %     ll = logLikelihood_extend(xi,M,D,options);
-                            %     [ll,dll] =  logLikelihood_extend(xi,M,D,options);
-                            %[g,g_fd_f,g_fd_b,g_fd_c] = testGradient(xi,@(xi) logLikelihood_extend(xi,M,D,options),1e-6);
-                            %[g,g_fd_f,g_fd_b,g_fd_c]
+                            % Check gradient for a random parameter
+                            xi = getParameterGuesses(parameters,@(xi) ...
+                                    logLikelihood(xi,M,D,options,conditions),...
+                                    1, parameters.min,parameters.max);
+                            [g,g_fd_f,g_fd_b,g_fd_c] = testGradient(xi,@(xi) logLikelihood(xi,M,D,options),1e-6);
+                            [g,g_fd_f,g_fd_b,g_fd_c]
+                            %scatter(g,g_fd_c)
                             
+                            % Optimization options
                             options.MS = PestoOptions();
                             options.MS.n_starts = 30;
                             options.MS.localOptimizerOptions.Display = 'iter';
+            
+                            % Get starting values for optimization runs
                             warning off
-                            
                             parameters.guess = getParameterGuesses(parameters,@(xi) ...
-                                logLikelihood_extend(xi,M,D,options,conditions),...
+                                logLikelihood(xi,M,D,options,conditions),...
                                 options.MS.n_starts, parameters.min,parameters.max);
-                            warning off
+                            
+                            % Perform multi-start optimization
                             parameters = getMultiStarts(parameters,@(xi) ...
-                                logLikelihood_extend(xi,M,D,options,conditions),options.MS);
-                            %parameters = getParameterProfiles(parameters,@(xi) ...
-                            %    logLikelihood_extend(xi,M,D,options,conditions),options.MS);
+                                logLikelihood(xi,M,D,options,conditions),options.MS);
+                            
+                            % Save results
                             if outlierflag
                                 save(['./resultsOutlierNoise/results_noise_model' num2str(m) '_' modelnames{m} '_' num2str(n_cells(ic)) ...
                                     'cells_' num2str(length(t)) 'tps_' num2str(set) ...
@@ -242,7 +258,7 @@ for m = [1,3,4]
                         catch e
                             fprintf(1,'error  message:\n%s',e.message);
                         end
-                    else
+                    else % results already exist
                         disp(['model' num2str(m) '_' modelnames{m} '_' num2str(n_cells(ic)) ...
                             'cells_' num2str(length(t)) 'tps_' num2str(set) ...
                             'paramset_' distributions{iDist} ' skipped']);

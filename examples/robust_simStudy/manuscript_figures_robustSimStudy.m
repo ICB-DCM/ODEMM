@@ -1,30 +1,15 @@
+% Generates the boxplots and example data histogram.
+
 clear all
 close all
 clc
 
-parametersSets{1} = [-1,-2,-1,-0.5,0.7;...
-    -0.5,-1,-1,-0.5,0.7;...
-    -1,-0.8,-1,0,0.7];
-parametersSets{2} = [1,1,-1,1,-1,0,0.5;
-    1.1,1.5,0,1.5,1,0,0.3;
-    2,1,1.5,2,1,0,0.2];
-parametersSets{3} = [1,1,1.3,0,0.5,0,0.3;...
-    1,2,2.3,0.5,1,0,0.2;...
-    2,0.5,1.8,1,1,0.1,0.7];
-parametersSets{4} = [1,1.2,-1,0,0.5;
-    1.1,1.5,0,0,0.3;
-    2,0.8,1.8,0,0.2];
-
-tps{1}=[0,0.5,1,2,4];
-tps{2}=[0,0.5,2,4];
-tps{3}=[0,0.5,2];
-n_cells = [50,100,500,1000];
-
+noiseFlag = true;
 modelnames = {'conversionReaction','diffProteinExpression',...
     'twoStageGeneExpression','diffProteinExpression'};
 distributions = {'norm','skew_norm','students_t','neg_binomial'};
 outlierstrs = {'outlier2_zeros','outlier5_dublets','outlier10_unif'};
-noiseFlag = true;
+load_simStudy_settings
 
 for m = [1,3,4]
     BICs = [];
@@ -36,7 +21,8 @@ for m = [1,3,4]
     all_t_cpus{2} = [];
     all_t_cpus{3} = [];
     all_t_cpus{4} = [];
-    %% no outliers
+    
+    %% No outliers
     count = 1;
     for it = 1:3
         t = tps{it};
@@ -124,7 +110,7 @@ for m = [1,3,4]
     else
         print('-depsc',['./figures/nooutlier_noise_boxplot_' modelnames{m}]);
     end
-    %% outlier
+    %% All outlier scenarios merged
     BICs = [];
     llhs = [];
     MSEs = [];
@@ -205,6 +191,7 @@ for m = [1,3,4]
             end
         end
     end
+    % Generate boxplots
     fh = robustSimStudy_boxplots(BICs,MSEs,all_t_cpus,converged,t_cpus);
     figure(fh)
     fh.PaperPosition=[0 0 4 9];

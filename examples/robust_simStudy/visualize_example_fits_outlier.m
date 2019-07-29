@@ -1,28 +1,26 @@
+% Visualizes the fits for an example of each outlier scenario.
+
 clear all
 close all
 clc
 
-outlierstrs = {'outlier2_zeros','outlier5_dublets','outlier10_unif'};
 noiseFlag = true;
+outlierstrs = {'outlier2_zeros','outlier5_dublets','outlier10_unif'};
+modelnames = {'conversionReaction','diffProteinExpression','twoStageGeneExpression'};
+distributions = {'norm','neg_binomial','skew_norm','students_t'};
 
+load_plot_settings_robust
+load_simStudy_settings
+    
+m = 1;
+ic = 4;
+t = tps{3};
+set = 1;
+    
 for iOut = 1:3
     close all
     clear options_plot
     outlierstr = outlierstrs{iOut};
-    tps{1}=[0,0.5,1,2,4];
-    tps{2}=[0,0.5,2,4];
-    tps{3}=[0,0.5,2];
-    n_cells = [50,100,500,1000];
-
-    modelnames = {'conversionReaction','diffProteinExpression','twoStageGeneExpression'};
-    distributions = {'norm','neg_binomial','skew_norm','students_t'};
-
-    load_plot_settings_robust
-    m = 1;
-    ic = 4;
-    it = 3; t = tps{it};
-    set = 1;
-
     warning off
     load(['./dataOutlier/data_model' num2str(m) '_' modelnames{m} '_' num2str(n_cells(ic)) ...
         'cells_' num2str(length(t)) 'tps_' num2str(set) 'paramset_' outlierstr],'D')

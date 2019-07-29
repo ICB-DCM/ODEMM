@@ -12,14 +12,14 @@ modelnames = {'conversionReaction',... % 1D data
 
 load_simStudy_settings
 
+outlierPerc = 0.1; % fraction which is chosen to be outliers
+outlierstr = 'outlier10_unif';
+
 % outlierPerc = 0.02;
 % outlierstr = 'outlier2_zeros';
- 
+
 % outlierPerc = 0.05;
 % outlierstr = 'outlier5_dublets';
-
-outlierPerc = 0.1;
-outlierstr = 'outlier10_unif';
 
 % If folder does not exist, generate it
 if ~(exist('dataOutlier')==7)
@@ -34,19 +34,24 @@ for m = [1,3,4]
                 load(['./data/data_model' num2str(m) '_' modelnames{m} '_' ...
                     num2str(n_cells(ic)) ...
                     'cells_' num2str(length(t)) 'tps_' num2str(set) 'paramsetD'],'D')
+                
+                % Get number of outliers
                 nOutlier = round(n_cells(ic)*outlierPerc);
+                
+                % Get random indices of outliers
                 indOutlier = randperm(n_cells(ic));
                 indOutlier = indOutlier(1:nOutlier);
+                
                 switch outlierstr
-                    case 'outlier2_zeros'
+                    case 'outlier2_zeros' % set to zero
                         for iit = 1:length(t)
                             D.y(:,iit,indOutlier,:) = 0;
                         end
-                    case 'outlier5_dublets'
+                    case 'outlier5_dublets' % double its value
                         for iit = 1:length(t)
                             D.y(:,iit,indOutlier,:) = 2*D.y(:,iit,indOutlier,:);
                         end
-                    case 'outlier10_unif'
+                    case 'outlier10_unif' % assign rounded uniformly distributed value in interval
                         for iit = 1:length(t)
                             interv = max(squeeze(D.y(:,iit,:,:)))-min(squeeze(D.y(:,iit,:,:)));
                             lb = max(0,min(squeeze(D.y(:,iit,:,:)))-interv*0.25);
@@ -54,6 +59,8 @@ for m = [1,3,4]
                             D.y(:,iit,indOutlier,:) = round(rand(length(indOutlier),1)*(lb-ub)+ub);
                         end
                 end
+                
+                % Save data
                 save(['./dataOutlier/data_model' num2str(m) '_' ...
                     modelnames{m} '_' num2str(n_cells(ic)) ...
                     'cells_' num2str(length(t)) 'tps_' num2str(set) ...
