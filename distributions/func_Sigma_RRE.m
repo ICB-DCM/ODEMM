@@ -1,5 +1,5 @@
 function Sigma = func_Sigma_RRE(varargin)
-% UNDER CONSTRUCTION!
+warning('This function needs to be tested!')
 t = varargin{1};
 x = varargin{2};
 xi = varargin{3};

@@ -42,7 +42,7 @@ for m = [1,3,4]
                         'cells_' num2str(length(t)) 'tps_' num2str(set) 'paramsetD'],'D')
                 end
                 D(1).u = 1;
-                for iDist = 4%1:4
+                for iDist = 1:4
                     if outlierflag
                         checkExist = exist(['./resultsOutlierNoise/results_noise_model' ...
                             num2str(m) '_' modelnames{m} '_' num2str(n_cells(ic)) ...

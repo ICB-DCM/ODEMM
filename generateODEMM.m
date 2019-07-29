@@ -558,6 +558,7 @@ for s = 1:M.n_subpop
                             str_ddeltadxi = regexprep(str_ddeltadxi,'u_([0-9]+)','u($1)');
                     end
                 case 'RRE'
+                    warning('This case needs to be tested!')
                     if size(D(e).u,2) == 1
                         ind = '[';
                         for l = 1:size(M.sym.ind{s,e},2)

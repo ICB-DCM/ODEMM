@@ -1,5 +1,4 @@
 function dSigmadxi = func_dSigmadxi_RRE(t,x,dxdxi,xi,n_dim,varargin)
-% UNDER CONSTRUCTION!
 % This function calculates derivate of Sigma in case of a Reaction Rate
 % Equation model
 %
@@ -14,6 +13,7 @@ function dSigmadxi = func_dSigmadxi_RRE(t,x,dxdxi,xi,n_dim,varargin)
 % xi: parameter vector
 % n_dim: dimension of measurement
 
+warning('This function needs to be tested!')
 
 dSigmadxi = zeros(numel(t),numel(xi),n_dim,n_dim);
 ind = varargin{6};
