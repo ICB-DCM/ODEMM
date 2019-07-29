@@ -34,7 +34,8 @@ end
 % Set defaults
 options.type = 'kde';
 options.switch_axes = false;
-options.hold_on = 0;
+options.hold_on = false;
+options.fs = 8;
 % model
 options.model.col = 'r';
 options.model.lw  = 2;
@@ -53,6 +54,8 @@ options.data.col  = 'b';
 options.data.lw   = 2;
 options.data.bins = 100;
 options.data.edgealpha =0.5;
+options.data.facealpha = 1;
+options.data.plot_scale = 'lin';
 % 2D
 options.data.marker = 'k.';
 options.data.markersize = 1.5;
@@ -66,7 +69,7 @@ options.subplot_lin = false;
 options.plainstyle = false;
 options.legendflag = true;
 options.titleflag = true;
-
+options.y_counts = false;
 % indices for which the data and model should be visualized,
 % the whole data set is visualized if I = []
 options.I = 1:length(D);
@@ -92,6 +95,7 @@ end
 if nargin >= 4
     options = setdefault(varargin{4},options);
 end
+
 if ~iscell(options.model.col)
     temp = options.model.col;
     options.model = rmfield(options.model, 'col');
@@ -134,7 +138,11 @@ for e = options.I
     end
 end
 if options.hold_on
-    fh = varargin{5};
+    fh = options.fh;
+    try
+        fhm = options.fhm;
+    catch
+    end
 end
 %% simulate conditions
 if ~isempty(M)
@@ -151,7 +159,7 @@ for e = options.I
     clearvars w mu sigma Sigma nu
     r=1;
     %% check plotting case
-    if size(D(e).u,2) == 1 && size(D(e).t,2) >= 1
+    if size(D(e).u,2) <= 1 && size(D(e).t,2) >= 1
         % one dose with (one or more) time points
         plotcase = 'one dose more tps';
     elseif size(D(e).u,2) >= 1 && size(D(e).t,2) == 1
@@ -160,7 +168,6 @@ for e = options.I
     end
     %% open figures
     if (~options.sameplot || mod(e,2)) & ~options.hold_on
-        
         if D(e).n_dim > 1 && options.marginals
             for n = 1:D(e).n_dim
                 fhm{e,n} = figure('name',[D(e).name ...
@@ -168,7 +175,6 @@ for e = options.I
             end
         end
         fh{e} = figure('name',[D(e).name]);
-        
     end
     %% evaluate model
     inds = 0;
@@ -187,13 +193,12 @@ for e = options.I
                     evalModel(xi,M,D,e,r,d,X_c,options,conditions);
                 end
                 for k=1:numel(tu_ind{e})
-                    [lim,hists,grids]=setYminmaxHists(D,e,tu_ind{e}(d),options,inds(ind));
+                    [lim,hists,grids]=setYminmaxHists(D,e,d,options,inds(ind),M);
                     if D(e).n_dim == 2 && ~isempty(M)
                         if inds(ind) == 0
                             if options.data.kde
                                 for i = 1:2
                                     subplot(2,numel(tu_ind{e}),c);
-                                    
                                     if i == 1
                                         c = c+numel(tu_ind{e});
                                     else
@@ -225,7 +230,6 @@ for e = options.I
                                 inds(ind),lim,hists,grids,1,1);
                         end
                     elseif D(e).n_dim == 2 && isempty(M)
-                        
                         if options.subplot_lin
                             subplot(1,numel(tu_ind{e}),k);
                         else
@@ -260,25 +264,35 @@ for e = options.I
                         if options.subplot_lin
                             view(90,-90);
                         end
+                        set(gca,'FontSize',options.fs,'TickDir','out');
                     end
                     if options.titleflag
                         title(['time ' num2str(D(e).t(tu_ind{e}(k)))]);
                     end
                 end
             case 'more dose one tp'
-                if inds(ind) > 0
-                    figure(fhm{e,inds(ind)});
+                if ~options.sameplot || mod(e,2)
+                    if inds(ind) > 0
+                        figure(fhm{e,inds(ind)});
+                    else
+                        figure(fh{e});
+                    end
                 else
-                    figure(fh{e});
+                    if inds(ind) > 0
+                        figure(fhm{e-1,inds(ind)});
+                    else
+                        figure(fh{e-1});
+                    end
                 end
+
                 k=1;
                 c=1;
                 for d=1:numel(tu_ind{e})
                     if ~isempty(M)
                         evalModel(xi,M,D,e,r,tu_ind{e}(d),X_c,options,conditions);
                     end
-                    [lim,hists,grids]=setYminmaxHists(D,e,tu_ind{e}(d),options,inds(ind));
-                    
+                    [lim,hists,grids]=setYminmaxHists(D,e,tu_ind{e}(d),options,inds(ind),M);
+
                     if D(e).n_dim == 2 && ~isempty(M)
                         if inds(ind) == 0
                             if options.data.kde
@@ -293,6 +307,11 @@ for e = options.I
                                         (options.legendflag & d==numel(tu_ind{e})),...
                                         inds(ind),lim,hists,grids,i==2,i==1);
                                 end
+                            elseif options.subplot_lin
+                                subplot(1,numel(tu_ind{e}),d);
+                                evalPdf(M,D,e,tu_ind{e}(d),k,options,...
+                                    (options.legendflag & d==numel(tu_ind{e})),...
+                                    inds(ind),lim,hists,grids,1,0);
                             else
                                 sx = round(sqrt(numel(tu_ind{e})));
                                 sy = ceil(numel(tu_ind{e})/sx);
@@ -320,7 +339,7 @@ for e = options.I
                             sy = ceil(numel(tu_ind{e})/sx);
                             subplot(sx,sy,d);
                         end
-                        
+
                         evalPdf(M,D,e,tu_ind{e}(d),k,options,0,inds(ind),lim,hists,grids,0,1);
                     else
                         if options.subplot_lin
@@ -330,9 +349,9 @@ for e = options.I
                             sy = ceil(numel(tu_ind{e})/sx);
                             subplot(sx,sy,d);
                         end
-                        
+
                         evalPdf(M,D,e,tu_ind{e}(d),k,options,0,inds(ind),lim,hists,grids,1,1);
-                        
+
                         if tu_ind{e}(d)~=1
                             if options.plainstyle
                                 set(gca,'xtick','');
@@ -381,7 +400,7 @@ end
 end
 
 function [] = evalModel(xi,M,D,e,r,d,X_c,options,conditions)
-global w mu sigma Sigma nu
+global w mu sigma Sigma nu rho tau delta
 for s = 1:M.n_subpop
     u_dse = [D(e).u(:,d);M.u{s,e}];
     t_ind = find(conditions(D(e).c(s,d)).time==D(e).t);
@@ -404,15 +423,15 @@ for s = 1:M.n_subpop
             X(:,D(e).n_dim+n) = covscale(n)*Z(:,D(e).n_dim+n);
         end
     end
-    if D(e).n_dim == 1
+    if D(e).n_dim == 1 && ~strcmp(M.distribution{s,e},'students_t') && ...
+            ~strcmp(M.distribution{s,e},'skew_norm')
         switch M.distribution{s,e}
             case {'norm', 'logn', 'logn_median', 'logn_mean'}
                 sigma{s} = M.sigma{s,e}(D(e).t,X,xi,u_dse);
                 mu{s} = M.mu{s,e}(D(e).t,X,sigma{s},xi,u_dse);
-            case 't'
-                nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
-                mu{s} = M.mu{s,e}(D(e).t,X,xi,u_dse);
-                sigma{s} = M.sigma{s,e}(D(e).t,X,xi,nu{s},u_dse);
+            case 'neg_binomial'
+                rho{s} = M.rho{s,e}(D(e).t,X,xi,u_dse);
+                tau{s} = M.tau{s,e}(D(e).t,X,rho{s},xi,u_dse);
             otherwise
                 error('Invalid distribution assumption')
         end
@@ -421,8 +440,14 @@ for s = 1:M.n_subpop
             case {'norm', 'logn', 'logn_median', 'logn_mean'}
                 Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
                 mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
-            case 't'
-                error('todo multidim tdist');
+            case 'students_t'
+                nu{s} = M.nu{s,e}(D(e).t,X,xi,u_dse);
+                Sigma{s} = M.Sigma{s,e}(D(e).t,X,xi,u_dse);
+                mu{s} = M.mu{s,e}(D(e).t,X,Sigma{s},xi,u_dse);
+            case 'skew_norm'
+                delta{s} = M.delta{s,e}(D(e).t,X,xi,u_dse);
+                Sigma{s} = M.Sigma{s,e}(D(e).t,X,delta{s},xi,u_dse);
+                mu{s} = M.mu{s,e}(D(e).t,X,delta{s},xi,u_dse);
             otherwise
                 error('Invalid distribution assumption')
         end
@@ -431,7 +456,7 @@ for s = 1:M.n_subpop
 end
 end
 
-function [lim,hists,grids] = setYminmaxHists(D,e,d,options,ind)
+function [lim,hists,grids] = setYminmaxHists(D,e,d,options,ind,M)
 if D(e).n_dim == 1 || ind > 0
     if isempty(options.boundaries(e).y_min) || isempty(options.boundaries(e).y_max)
         y_min{e} =  inf;
@@ -468,19 +493,37 @@ if D(e).n_dim == 1 || ind > 0
         y_min{e} = options.boundaries(e).y_min;
         y_max{e} = options.boundaries(e).y_max;
     end
-    switch options.x_scale
-        case 'lin'
-            y_hist = linspace(y_min{e},y_max{e},options.data.bins+1)';
-            d_y_hist = y_hist(2)-y_hist(1);
-            y_grid = linspace(y_min{e},y_max{e},options.model.points+1)';
-            d_y_grid = y_grid(2)-y_grid(1);
-        case 'log'
-            z_hist = linspace(log10(y_min{e}),log10(y_max{e}),options.data.bins+1)';
-            d_y_hist = (z_hist(2)-z_hist(1));
-            y_hist = 10.^z_hist;
-            z_grid = linspace(log10(y_min{e}),log10(y_max{e}),options.model.points+1)';
-            d_y_grid = (z_grid(2)-z_grid(1));
-            y_grid = 10.^z_grid;
+
+    if ~isempty(M) && strcmp(M.distribution{1,e},'neg_binomial')
+        switch options.x_scale
+            case 'lin'
+                y_hist = linspace(y_min{e},y_max{e},options.data.bins+1)';
+                d_y_hist = y_hist(2)-y_hist(1);
+                y_grid = [floor(y_min{e}):ceil(y_max{e})]';
+                d_y_grid = y_grid(2)-y_grid(1);
+            case 'log'
+                z_hist = linspace(log10(y_min{e}),log10(y_max{e}),options.data.bins+1)';
+                d_y_hist = (z_hist(2)-z_hist(1));
+                y_hist = 10.^z_hist;
+                z_grid = [floor(log10(y_min{e})):log10(ceil(y_max{e}))]'';
+                d_y_grid = (z_grid(2)-z_grid(1));
+                y_grid = 10.^z_grid;
+        end
+    else
+        switch options.x_scale
+            case 'lin'
+                y_hist = linspace(y_min{e},y_max{e},options.data.bins+1)';
+                d_y_hist = y_hist(2)-y_hist(1);
+                y_grid = linspace(y_min{e},y_max{e},options.model.points+1)';
+                d_y_grid = y_grid(2)-y_grid(1);
+            case 'log'
+                z_hist = linspace(log10(y_min{e}),log10(y_max{e}),options.data.bins+1)';
+                d_y_hist = (z_hist(2)-z_hist(1));
+                y_hist = 10.^z_hist;
+                z_grid = linspace(log10(y_min{e}),log10(y_max{e}),options.model.points+1)';
+                d_y_grid = (z_grid(2)-z_grid(1));
+                y_grid = 10.^z_grid;
+        end
     end
 elseif D(e).n_dim == 2 && ind == 0
     if isempty(options.boundaries(e).y_min) || isempty(options.boundaries(e).y_max)
@@ -542,7 +585,7 @@ end
 
 
 function [] = evalPdf(M,D,e,d,k,options,legendflag,ind,lim,hists,grids,plotModel,plotData)
-global w mu sigma Sigma nu
+global w mu sigma Sigma nu rho tau delta
 y_min = lim.y_min;
 y_max = lim.y_max;
 y_hist = hists.y_hist;
@@ -582,8 +625,6 @@ if ~isempty(M)
                     if ind > 0
                         Sigma_temp = permute(Sigma{s}(k,:,:),[2,3,1]);
                         sigma{s}(k) = sqrt(Sigma_temp(ind,ind));
-                    end
-                    if ind > 0
                         p = p + w{s}(k)*pdf('logn',y_grid,mu{s}(k,ind),sigma{s}(k));
                         p_s{s} = w{s}(k)*pdf('logn',y_grid,mu{s}(k,ind),sigma{s}(k));
                         cp = cp + w{s}(k)*cdf('logn',y_grid,mu{s}(k,ind),sigma{s}(k));
@@ -601,9 +642,33 @@ if ~isempty(M)
                         p_s{s} = w{s}(k)*pdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
                         cp = cp + w{s}(k)*cdf('norm',y_grid,mu{s}(k,ind),sigma{s}(k));
                     else
-                        p = p + w{s}(k)*pdf('norm',y_grid,mu{s}(k),sigma{s}(k));
-                        p_s{s} = w{s}(k)*pdf('norm',y_grid,mu{s}(k),sigma{s}(k));
-                        cp = cp + w{s}(k)*cdf('norm',y_grid,mu{s}(k),sigma{s}(k));
+                         p = p + w{s}(k)*pdf('norm',y_grid,mu{s}(k),sigma{s}(k));
+                    p_s{s} = w{s}(k)*pdf('norm',y_grid,mu{s}(k),sigma{s}(k));
+                    cp = cp + w{s}(k)*cdf('norm',y_grid,mu{s}(k),sigma{s}(k));
+                    end
+                case 'students_t'
+                    if ind > 0
+                        Sigma_temp = permute(Sigma{s}(k,:,:),[2,3,1]);
+                        sigma2_tmp{s}(k) = Sigma_temp(ind,ind);
+                        p = p + w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k,ind),sigma2_tmp{s}(k),nu{s}(k)));
+                        p_s{s} = w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k,ind),sigma2_tmp{s}(k),nu{s}(k)));
+                    else
+                        p = p + w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
+                        p_s{s} = w{s}(k)*exp(logofmvtpdf(y_grid,mu{s}(k),Sigma{s}(k),nu{s}(k)));
+                    end
+                case 'neg_binomial'
+                    p = p + w{s}(k)*exp(logofnbinpdf(y_grid,tau{s}(k),rho{s}(k)));
+                    p_s{s} = w{s}(k)*exp(logofnbinpdf(y_grid,tau{s}(k),rho{s}(k)));
+                case 'skew_norm'
+                    if ind > 0
+                        Sigma_temp = permute(Sigma{s}(k,:,:),[2,3,1]);
+                        sigma2_tmp{s}(k) = Sigma_temp(ind,ind);
+                        delta_tmp{s} = delta{s}(ind);
+                        p = p + w{s}(k)*exp(logofskewnormpdf(y_grid,mu{s}(k,ind),sigma2_tmp{s}(k),delta_tmp{s}));
+                        p_s{s} = w{s}(k)*exp(logofskewnormpdf(y,mu{s}(k,ind),sigma2_tmp{s}(k),delta_tmp{s}));
+                    else
+                        p = p + w{s}(k)*exp(logofskewnormpdf(y_grid,mu{s}(k),Sigma{s}(k),delta{s}));
+                        p_s{s} = w{s}(k)*exp(logofskewnormpdf(y,mu{s}(k),Sigma{s}(k),delta{s}));
                     end
             end
         end
@@ -616,6 +681,10 @@ if ~isempty(M)
                     P = P + w{s}(k)*reshape(bsxfun(@rdivide,mvnpdf(log([Y1(:),Y2(:)]),mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1])),prod([Y1(:),Y2(:)],2)),size(Y1));
                 case 'norm'
                     P =  P + w{s}(k)*reshape(mvnpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1])),size(Y1));
+                case {'students_t'}
+                    P =  P + w{s}(k)*reshape(exp(logofmvtpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),nu{s}(k))),size(Y1));
+                case {'skew_norm'}
+                    P =  P + w{s}(k)*reshape(exp(logofskewnormpdf([Y1(:),Y2(:)],mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1]),delta{s})),size(Y1));
             end
         end
     end
@@ -629,19 +698,31 @@ if (~options.replicates && ~isempty(D(e).y) && plotData) || ...
                 case 'filled'
                     legendhandles.data = fill(y_hist(round(0.5:0.5:length(y_hist))),[0;h(round(0.5:0.5:length(h)));0],options.data.col{e}); hold on;
                     legendhandles.data.EdgeColor = options.data.col{e};
+                    legendhandles.data.FaceAlpha = options.data.facealpha;
                 case 'empty'
                     legendhandles.data = plot(y_hist(round(0.5:0.5:length(y_hist))),[0;h(round(0.5:0.5:length(h)));0],...
                         '-','color',options.data.col{e},'linewidth',options.data.lw); hold on;
             end
         else
-            hs=scatter(log10(y(:,1)),log10(y(:,2)),options.data.markersize,'.'); hold on;
-            set(hs,'MarkerEdgeColor',options.data.col{e});
-            set(hs,'MarkerEdgeAlpha',options.data.edgealpha);
-            [~,kdensity,X1,X2]=kde2d(log10(y));
-            contour(X1,X2,kdensity,options.model.levelsets{e,d},'color',options.model.col{e},...
-                'LineWidth',options.model.level_linewidth); hold on;
-            xlim([log10(y_grid{1}(1)),log10(y_grid{1}(end))]);
-            xlim([log10(y_grid{2}(1)),log10(y_grid{2}(end))]);
+            if strcmp(options.x_scale,'log')
+                hs=scatter(log10(y(:,1)),log10(y(:,2)),options.data.markersize,'.'); hold on;
+                set(hs,'MarkerEdgeColor',options.data.col{e});
+                set(hs,'MarkerEdgeAlpha',options.data.edgealpha);
+                [~,kdensity,X1,X2]=kde2d(log10(y));
+                contour(X1,X2,kdensity,options.model.levelsets{e,d},'color',options.model.col{e},...
+                    'LineWidth',options.model.level_linewidth); hold on;
+                xlim([log10(y_grid{1}(1)),log10(y_grid{1}(end))]);
+                ylim([log10(y_grid{2}(1)),log10(y_grid{2}(end))]);
+            else
+                hs=scatter(y(:,1),y(:,2),options.data.markersize,'.'); hold on;
+                set(hs,'MarkerEdgeColor',options.data.col{e});
+                set(hs,'MarkerEdgeAlpha',options.data.edgealpha);
+                [~,kdensity,X1,X2]=kde2d(y);
+                contour(X1,X2,kdensity,options.model.levelsets{e,d},'color',options.model.col{e},...
+                    'LineWidth',options.model.level_linewidth); hold on;
+                xlim([y_grid{1}(1),y_grid{1}(end)]);
+                ylim([y_grid{2}(1),y_grid{2}(end)]);
+            end
             box on;
         end
     end
@@ -660,11 +741,12 @@ if ~isempty(M) && plotModel
                             end
                         end
                         legendhandles.model = plot(y_grid,p*d_y_hist,'-','color',...
-                            options.model.col{e},'linewidth',options.model.lw,  'linestyle',options.model.ls);
+                            options.model.col{e},'linewidth',options.model.lw,'linestyle',options.model.ls);
                     case 'log'
                         if options.model.subpopulations
                             for s = 1:M.n_subpop
-                                legendhandles.subpop = plot(y_grid,p_s{s}.*y_grid*d_y_hist*log(10),'--','color',options.model.col{e},'linewidth',options.model.lw); hold on;
+                                legendhandles.subpop = plot(y_grid,p_s{s}.*y_grid*d_y_hist*log(10),...
+                                    '--','color',options.model.col{e},'linewidth',options.model.lw); hold on;
                             end
                         end
                         legendhandles.model = plot(y_grid,p.*y_grid*d_y_hist*log(10),'-',...
@@ -684,7 +766,8 @@ if ~isempty(M) && plotModel
         set(hs,'MarkerEdgeColor',options.data.col{e});
         set(hs,'MarkerEdgeAlpha',options.data.edgealpha);
         box on;
-        contour(Y1,Y2,P,options.model.levelsets{e,d},'color',options.model.col{e},'LineWidth',options.model.level_linewidth); hold on;
+        contour(Y1,Y2,P,options.model.levelsets{e,d},...
+            'color',options.model.col{e},'LineWidth',options.model.level_linewidth); hold on;
     end
 end
 
@@ -716,28 +799,31 @@ if D(e).n_dim == 1 || ind > 0
         end
     end
 else
-    if plotData
+    if plotData && strcmp(options.x_scale,'log')
         xlim([log10(y_min{e}(1)),log10(y_max{e}(1))]);
         ylim([log10(y_min{e}(2)),log10(y_max{e}(2))]);
+    elseif plotData && strcmp(options.x_scale,'lin')
+        xlim([y_min{e}(1),y_max{e}(1)]);
+        ylim([y_min{e}(2),y_max{e}(2)]);
     end
     if plotModel
         set(gca,'xscale',options.x_scale);
         set(gca,'yscale',options.x_scale);
     end
-    if ~options.sameplot || mod(e,2)
-        if plotModel
-            xlim([y_min{e}(1),y_max{e}(1)]);
-            ylim([y_min{e}(2),y_max{e}(2)])
-        end
-    else
-        xlim([y_min{e-1}(1),y_max{e-1}(1)]);
-        ylim([y_min{e-1}(2),y_max{e-1}(2)])
+    %if ~options.sameplot || mod(e,2)
+    if plotModel
+        xlim([y_min{e}(1),y_max{e}(1)]);
+        ylim([y_min{e}(2),y_max{e}(2)])
     end
+    %else
+    %    xlim([y_min{e-1}(1),y_max{e-1}(1)]);
+    %    ylim([y_min{e-1}(2),y_max{e-1}(2)])
+    %end
     if options.switch_axes
         set(gca,'ydir','reverse');
     end
     if ~options.plainstyle
-        if plotData
+        if plotData && strcmp(options.x_scale,'log')
             xlabel([D(e).measurand{1} ' [log10]']);
             ylabel([D(e).measurand{2} ' [log10]']);
         else
@@ -747,7 +833,7 @@ else
         if ~options.data.kde & legendflag
             legend('data','model')
         end
-        
+
     end
 end
 if ~isempty(options.xtick{e})
@@ -760,4 +846,7 @@ if plotModel || D(e).n_dim == 1 || ind > 0
     set(gca,'xscale',options.x_scale);
 end
 
+if options.y_counts
+    set(gca,'ytick',[0:0.1:0.3],'yticklabel',{'0','100','200','300'});
+end
 end

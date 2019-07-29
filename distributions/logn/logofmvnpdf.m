@@ -12,7 +12,6 @@ if nargout >= 2
     n_xi = size(dmudxi,2);
 end
 
-
 if nargin<1
     error(message('stats:mvnpdf:TooFewInputs'));
 elseif ndims(y)~=2
@@ -29,10 +28,13 @@ if ~isequal(size(mu,1),d)
     y = y';
 end
 
-n = size(y,2);
 if ~isequal(size(y,1),d)
-    error(message('y and mu need to have the same dimension'))
+    y = y';
+    if ~isequal(size(y,1),d)
+        error(message('y and mu need to have the same dimension'))
+    end
 end
+n = size(y,2);
 
 % Assume zero mean, data are already centered
 if nargin < 2 || isempty(mu)
@@ -129,10 +131,16 @@ if nargout >= 2
     dlogf = nan(n_xi,n);
     SigmaIn = inv(Sigma);
     for i = 1:n_xi
-        dSigmaIndxi = -SigmaIn*squeeze(dSigmadxi(:,:,i))*SigmaIn;
+        if length(size(dSigmadxi)) < 3 && size(dSigmadxi,1) == 1
+            tmpdSigmadxi = dSigmadxi(i);
+        else
+            tmpdSigmadxi = squeeze(dSigmadxi(:,:,i));
+        end
+        
+        dSigmaIndxi = -SigmaIn*tmpdSigmadxi*SigmaIn;
         dZdxi(:,i) = -yc'*SigmaIn*dmudxi(:,i) - (dmudxi(:,i)'*SigmaIn*yc)' + sum(yc'.*(dSigmaIndxi*yc)',2);       
         
-        dlogf(i,:) = -0.5*(trace(SigmaIn*squeeze(dSigmadxi(:,:,i)))+dZdxi(:,i))';
+        dlogf(i,:) = -0.5*(trace(SigmaIn*tmpdSigmadxi)+dZdxi(:,i))';
     end
     varargout{2} = dlogf;
 end

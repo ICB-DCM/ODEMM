@@ -15,12 +15,12 @@ M.mean_ind{s,e} = [1];
 M.var_ind{s,e} = [2];
 M.w_ind{s,e} = [];
 M.mu{s,e} = @(t,x,sigma,xi,u) [log(x(:,1)) - sigma.^2/2];
-M.dmudxi{s,e} = @(t,x,dxdxi,sigma,dsigmadxi,xi,u) bsxfun(@plus, [bsxfun(@rdivide, permute(dxdxi(1,:,:),[3,2,1]), x(:,1))],...
-	bsxfun(@plus,[bsxfun(@times, -dsigmadxi, sigma)],...
+M.dmudxi{s,e} = @(t,x,dxdxi,sigma,dsigmadxi,xi,u) bsxfun(@plus, [bsxfun(@rdivide,permute(dxdxi(1,:,:),[3,2,1]),x(:,1))],...
+	bsxfun(@plus,[-bsxfun(@times,dsigmadxi,sigma)],...
 	[0,0,0,0,0,0,0]));
 
-M.sigma{s,e} = @(t,x,xi,u)	[(log(x(:,2)./x(:,1).^2 + 1) + 10.^(2*xi(6))).^(1./2)];
-M.dsigmadxi{s,e} = @(t,x,dxdxi,xi,u)	bsxfun(@rdivide,func_dsigma2dxi_logn(t,x,dxdxi,xi,10^(2*xi(6)),[0,0,0,0,0,2*10^(2*xi(6))*log(10),0],'multiplicative'),2*((log(x(:,2)./x(:,1).^2 + 1) + 10.^(2*xi(6))).^(1./2)));
+M.sigma{s,e} = @(t,x,xi,u)	[(log(bsxfun(@rdivide,x(:,2),x(:,1).^2)+1)+10.^(bsxfun(@times,2,xi(6)))).^(bsxfun(@rdivide,1,2))];
+M.dsigmadxi{s,e} = @(t,x,dxdxi,xi,u)	bsxfun(@rdivide,func_dsigma2dxi_logn(t,x,dxdxi,xi,10^(2*xi(6)),[0,0,0,0,0,2*10^(2*xi(6))*log(10),0],'multiplicative'),2*((log(bsxfun(@rdivide,x(:,2),x(:,1).^2)+1)+10.^(bsxfun(@times,2,xi(6)))).^(bsxfun(@rdivide,1,2))));
 
 M.w{s,e} = @(t,x,xi,u)[xi(7);xi(7);xi(7);xi(7);xi(7)];
 M.dwdxi{s,e} = @(t,x,dxdxi,xi,u)bsxfun(@plus, [0;0;0;0;0],...
@@ -44,12 +44,12 @@ M.mean_ind{s,e} = [1];
 M.var_ind{s,e} = [2];
 M.w_ind{s,e} = [];
 M.mu{s,e} = @(t,x,sigma,xi,u) [log(x(:,1)) - sigma.^2/2];
-M.dmudxi{s,e} = @(t,x,dxdxi,sigma,dsigmadxi,xi,u) bsxfun(@plus, [bsxfun(@rdivide, permute(dxdxi(1,:,:),[3,2,1]), x(:,1))],...
-	bsxfun(@plus,[bsxfun(@times, -dsigmadxi, sigma)],...
+M.dmudxi{s,e} = @(t,x,dxdxi,sigma,dsigmadxi,xi,u) bsxfun(@plus, [bsxfun(@rdivide,permute(dxdxi(1,:,:),[3,2,1]),x(:,1))],...
+	bsxfun(@plus,[-bsxfun(@times,dsigmadxi,sigma)],...
 	[0,0,0,0,0,0,0]));
 
-M.sigma{s,e} = @(t,x,xi,u)	[(log(x(:,2)./x(:,1).^2 + 1) + 10.^(2*xi(6))).^(1./2)];
-M.dsigmadxi{s,e} = @(t,x,dxdxi,xi,u)	bsxfun(@rdivide,func_dsigma2dxi_logn(t,x,dxdxi,xi,10^(2*xi(6)),[0,0,0,0,0,2*10^(2*xi(6))*log(10),0],'multiplicative'),2*((log(x(:,2)./x(:,1).^2 + 1) + 10.^(2*xi(6))).^(1./2)));
+M.sigma{s,e} = @(t,x,xi,u)	[(log(bsxfun(@rdivide,x(:,2),x(:,1).^2)+1)+10.^(bsxfun(@times,2,xi(6)))).^(bsxfun(@rdivide,1,2))];
+M.dsigmadxi{s,e} = @(t,x,dxdxi,xi,u)	bsxfun(@rdivide,func_dsigma2dxi_logn(t,x,dxdxi,xi,10^(2*xi(6)),[0,0,0,0,0,2*10^(2*xi(6))*log(10),0],'multiplicative'),2*((log(bsxfun(@rdivide,x(:,2),x(:,1).^2)+1)+10.^(bsxfun(@times,2,xi(6)))).^(bsxfun(@rdivide,1,2))));
 
 M.w{s,e} = @(t,x,xi,u)[1 - xi(7);1 - xi(7);1 - xi(7);1 - xi(7);1 - xi(7)];
 M.dwdxi{s,e} = @(t,x,dxdxi,xi,u)bsxfun(@plus, [0;0;0;0;0],...

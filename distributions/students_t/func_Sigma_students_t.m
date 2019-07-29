@@ -1,9 +1,9 @@
-function Sigma = func_Sigma_norm(t,x,xi,n_dim,varargin)
+function Sigma = func_Sigma_students_t(t,x,xi,n_dim,varargin)
 % This function maps the means and variances to \f$\boldsymbol{\Sigma}\f$
-% of the multivariate normal distribution.
+% of the multivariate student's t distribution.
 %
 % USAGE:
-% Sigma = func_Sigma_norm(t,x,xi,n_dim,noise,''additive'')
+% Sigma = func_Sigma_studentst(t,x,xi,n_dim,noise,''additive'')
 %
 % Parameters:
 % t: time vector
@@ -15,13 +15,13 @@ function Sigma = func_Sigma_norm(t,x,xi,n_dim,varargin)
 %   * noisemodel: (so far only ''additive'' supported)
 %
 % Return values:
-% Sigma: (n_t x n_dim x n_dim) \f$\Sigma\f$ of the multivariate normal distribution.
+% Sigma: (n_t x n_dim x n_dim) \f$\Sigma\f$ of the multivariate student's t distribution.
 
 noise = zeros(n_dim,1);
 noisemodel = 'additive';
 if nargin > 4
     noise = varargin{1};
-    if nargin > 5
+    if nargin >5
         noisemodel = varargin{2};
     end
 end

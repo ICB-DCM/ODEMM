@@ -9,9 +9,9 @@ function dSigmadxi = func_dSigmadxi_norm(t,x,dxdxi,xi,n_dim,varargin)
 % Parameters:
 % t: time vector
 % x: (not used, included for consistency and possible extensions)
-% dxdxi: vector including derivatvies of the means and variances
+% dxdxi: vector including derivatives of the means and variances
 % xi: parameter vector
-% n_dim: numer of dimensions of multivariate log-normal distribution
+% n_dim: numer of dimensions of multivariate normal distribution
 % varargin:
 %   * noise: parameter for measurement noise
 %   * dnoisedxi: derivative of measurement noise
@@ -21,8 +21,8 @@ function dSigmadxi = func_dSigmadxi_norm(t,x,dxdxi,xi,n_dim,varargin)
 % dSigmadxi: (n_t x n_xi x n_dim x n_dim) derivative of 
 % \f$\boldsymbol{\Sigma}\f$ of the multivariate normal distribution
 
-noise = [0;0];
-dnoisedxi = zeros(2,numel(xi));
+noise = zeros(n_dim,1);
+dnoisedxi = zeros(n_dim,numel(xi));
 dSigmadxi = zeros(numel(t),numel(xi),n_dim,n_dim);
 
 noisemodel = 'additive';
@@ -47,7 +47,7 @@ else
     for k = 1:numel(t)
         n = n_dim+1;
         for i = 1:n_dim
-            for j = 1:n_dim
+            for j = i:n_dim
                 if isequal(i,j)
                     dSigmadxi(k,:,i,j) = permute(dxdxi(n,:,k),[3,2,1])+dnoisedxi(i,:);
                 else                   

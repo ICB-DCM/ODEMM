@@ -2,7 +2,7 @@
 
 clear all
 close all
-clear all
+clc
 
 load('./data/data_PDL');
 
