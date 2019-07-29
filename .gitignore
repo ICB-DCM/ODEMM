@@ -1,5 +1,6 @@
 old/
-doc/*
+doc/config
+doc/output
 *.csv
 *.eps
 *.fig

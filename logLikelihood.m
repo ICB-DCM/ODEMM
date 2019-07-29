@@ -218,7 +218,7 @@ for e = I % Loop: Experimental conditions
                             '''neg_binomial'',''students_t'',''logn'',''norm'',''skew_norm'''])
                 end
                 w{s} = M.w{s,e}(D(e).t,X,xi,u_dse);
-                
+
                 % Derivatives of distribution parameters
                 if nargout >= 2
                     dXdxi{s} = zeros(numel([M.mean_ind{s,e},M.var_ind{s,e},M.w_ind{s,e}]),length(xi),length(D(e).t));
@@ -281,7 +281,7 @@ for e = I % Loop: Experimental conditions
                     dwdxi{s} = M.dwdxi{s,e}(D(e).t,X,dXdxi{s},xi,u_dse);
                 end % gradient
             end % subpopulation
-            
+
             % Loop over the time points and
             for k = 1:length(D(e).t)
                 % get data
@@ -291,7 +291,7 @@ for e = I % Loop: Experimental conditions
                     y = squeeze(D(e).y(d,k,:,:));
                 end
                 y = y((sum(~isnan(y),2) == size(y,2)),:);
-                
+
                 % initialize
                 if options.use_robust
                     q = zeros(length(y),M.n_subpop);
@@ -346,13 +346,13 @@ for e = I % Loop: Experimental conditions
                                         SigmaIn = inv(permute(Sigma{s}(k,:,:),[2 3 1]));
                                         for n_xi = 1:length(xi)
                                             dSigmaIndxi = -SigmaIn*permute(dSigmadxi{s}(k,n_xi,:,:),[3,4,1,2])*SigmaIn;
-                                            
+
                                             H(:,n_xi,s) = bsxfun(@plus,dwdxi{s}(k,n_xi), w{s}(k).*(-0.5)*...
                                                 (repmat(sum(sum((SigmaIn.').*permute(dSigmadxi{s}(k,n_xi,:,:),[3,4,1,2]))),length(y),1)...
                                                 +  bsxfun(@minus,mu{s}(k,:),y)*SigmaIn*permute(dmudxi{s}(k,n_xi,:),[3,1,2])...
                                                 + (permute(dmudxi{s}(k,n_xi,:),[1,3,2])*SigmaIn*(bsxfun(@minus,mu{s}(k,:),y))')'...
                                                 + sum((bsxfun(@minus,mu{s}(k,:),y)*dSigmaIndxi).*bsxfun(@minus,mu{s}(k,:),y),2)));
-                                            
+
                                         end % xi
                                     end % gradient
                                 end % dimension
@@ -393,7 +393,7 @@ for e = I % Loop: Experimental conditions
                                             w{s}(k)/sigma{s}(k)*bsxfun(@times,p_s,...
                                             ((log(y)-mu{s}(k))/sigma{s}(k)*dmudxi{s}(k,:)+...
                                             (((log(y)-mu{s}(k))/sigma{s}(k)).^2-1)*dsigmadxi{s}(k,:)));
-                                        
+
                                     end
                                 else % multivariate
                                     p_s = bsxfun(@rdivide,mvnpdf(log(y),mu{s}(k,:),permute(Sigma{s}(k,:,:),[2,3,1])),prod(y,2));
@@ -436,7 +436,7 @@ for e = I % Loop: Experimental conditions
                                                 + bsxfun(@minus,mu{s}(k,:),y)*SigmaIn*permute(dmudxi{s}(k,n_xi,:),[3,1,2])...
                                                 + (permute(dmudxi{s}(k,n_xi,:),[1,3,2])*SigmaIn*(bsxfun(@minus,mu{s}(k,:),y))')'...
                                                 + sum((bsxfun(@minus,mu{s}(k,:),y)*dSigmaIndxi).*bsxfun(@minus,mu{s}(k,:),y),2));
-                                            
+
                                         end % xi
                                     end % gradient
                                 end % dimension
@@ -456,7 +456,7 @@ for e = I % Loop: Experimental conditions
                         end % distribution
                     end % robust
                 end % subpopulation loop
-                
+
                 %% Evaluation of mixture likelihood for this time point and dose
                 if options.use_robust
                     if nargout >= 2
@@ -509,4 +509,3 @@ if nargout >=2
         end
     end
 end
-

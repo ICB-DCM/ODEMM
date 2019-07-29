@@ -201,7 +201,7 @@ for e = 1:length(D)
                             otherwise
                                 error('case not defined');
                         end
-                        
+
                 end
             case {'HO','MCM'}
                 % definition of variance parameters and incorporation of measurement noise
@@ -247,7 +247,7 @@ for e = 1:length(D)
                         %                         end
                 end
         end
-        
+
         %% initialize mean parameters
         switch M.distribution{s,e}
             case {'norm','students_t'}
@@ -411,7 +411,7 @@ for s = 1:M.n_subpop
             str_dmudxi = ['M.dmudxi{s,e} = @(t,x,dxdxi,Sigma,dSigmadxi,xi,u) func_dmudxi_' M.distribution{s,e}...
                 '(t,x,dxdxi,Sigma,dSigmadxi,xi,u,' num2str(D(e).n_dim) ');'];
         end
-        
+
         if options.replicates
             % consider replicates individually
             rs = 1:length(D(e).replicate);
@@ -425,7 +425,7 @@ for s = 1:M.n_subpop
             str_s{r} = strcat(str_s{r},strcat(replace_xi_x_u(M.sym.scaling{r,e}),';'));
             str_b{r} =  'M.offset{r,e} = @(xi,u) ';
             str_b{r} = strcat(str_b{r},strcat(replace_xi_x_u(M.sym.offset{r,e}),';'));
-            
+
             str_dsdxi{r} = 'M.dscalingdxi{r,e} = @(xi,u) ';
             str_dbdxi{r} = 'M.doffsetdxi{r,e} = @(xi,u) ';
             M.sym.dscalingdxi{r,e} = jacobian(M.sym.scaling{r,e},xi);
@@ -433,7 +433,7 @@ for s = 1:M.n_subpop
             str_dsdxi{r} = strcat(str_dsdxi{r},strcat(replace_xi_x_u(M.sym.dscalingdxi{r,e}),';'));
             str_dbdxi{r} = strcat(str_dbdxi{r},strcat(replace_xi_x_u(M.sym.doffsetdxi{r,e}),';'));
         end
-        
+
         %% dsigma dsigmadxi
         if D(e).n_dim > 1 || strcmp(M.distribution{s,e},'students_t') || strcmp(M.distribution{s,e},'skew_norm')
             switch M.sim_type
@@ -610,13 +610,13 @@ for s = 1:M.n_subpop
                             else
                                 str_sigma = strcat(str_sigma,[str 'func_Sigma_RRE(t,x,xi,' num2str(D(e).n_dim) ', ' ind ' )']);
                                 str_dsigmadxi = strcat(str_dsigmadxi,[str ' func_dSigmadxi_RRE(t,x,dxdxi,xi,' num2str(D(e).n_dim) ', ' ind ')']);
-                                
+
                             end
                             if d < size(D(e).u,2)
                                 str_sigma = strcat(str_sigma,'+');
                                 str_dsigmadxi = strcat(str_dsigmadxi,'+');
                             end
-                            
+
                         end
                         str_sigma = strcat(str_sigma,';');
                         str_dsigmadxi = strcat(str_dsigmadxi,';');
@@ -716,7 +716,7 @@ for s = 1:M.n_subpop
                                             str_sigma = [str_sigma ']'];
                                         end
                                     end
-                                    
+
                                     if d < size(D(e).u,2)
                                         str_sigma = [str_sigma ' + ...\n\t'];
                                     else
@@ -737,7 +737,7 @@ for s = 1:M.n_subpop
                             str_temp = regexprep(str_temp,'x_([0-9]+)','x(:,$1)');
                             str_rho = strcat(str_rho,str_temp);
                             str_rho = [str_rho '];'];
-                            
+
                             % derivative
                             %str_drhodxi = strcat(str_drhodxi,getStrDerivative2Terms(M.sym.rho{s,e},x,dxdxi,xi));
                             %str_drhodxi = regexprep(str_drhodxi,'\^','.^');
@@ -748,7 +748,7 @@ for s = 1:M.n_subpop
                                 str_noise = strcat(str_noise,regexprep(char(M.sym.sigma_noise{e}),'xi_([0-9]+)','xi($1)'));
                                 str_noise = regexprep(str_noise,'u_([0-9]+)','u($1)');
                                 str_noise = [str_noise ']'];
-                                
+
                                 str_dnoisedxi = '[';
                                 M.sym.dnoisedxi{e} = jacobian(M.sym.sigma_noise{e},xi);
                                 for k = 1:length(M.sym.dnoisedxi{e})
@@ -765,7 +765,7 @@ for s = 1:M.n_subpop
                             else
                                  str_drhodxi = ['M.drhodxi{s,e} = @(t,x,dxdxi,xi,u) func_drhodxi(t,x,dxdxi,xi);'];
                             end
-                            
+
                         case 'RRE'
                             str_rho = [str_rho '['];
                             for k = 1:length(D(e).t)
@@ -790,7 +790,8 @@ for s = 1:M.n_subpop
                         '''neg_binomial'',''students_t'',''logn'',''norm'',''skew_norm'''])
             end
         end
-        
+
+
         str_distribution = ['M.distribution{s,e} = ''' M.distribution{s,e} ''''];
         fprintf(fid,['%% Subpopulation ' num2str(s) ' \n']);
         fprintf(fid,['%% Experiment ' num2str(e) ' \n']);
@@ -830,7 +831,7 @@ for s = 1:M.n_subpop
                 else
                     str_wind = [str_wind, '];'];
                 end
-                
+
             end
         end
         fprintf(fid,[str_meanind '\n']);
@@ -859,7 +860,7 @@ for s = 1:M.n_subpop
         fprintf(fid,[str_w '\n']);
         fprintf(fid,[str_dwdxi '\n']);
         fprintf(fid,[str_distribution ';\n\n']);
-        
+
         fprintf(fid,['M.u{s,e} = [']);
         for k = 1:length(M.u{s,e})
             fprintf(fid,num2str(M.u{s,e}(k)));
@@ -869,7 +870,7 @@ for s = 1:M.n_subpop
                 fprintf(fid,'];\n');
             end
         end
-        
+
         if options.replicates
             % consider replicates individually
             rs = 1:length(D(e).replicate);
@@ -893,7 +894,7 @@ if options.write_parameters
     str_max = 'parameters.max = [';
     str_min = 'parameters.min = [';
     str_constr_A = 'parameters.constraints.A = [';
-    
+
     for k = 1:length(parameters.name)
         fprintf(fid,['''' regexprep(parameters.name{k},'\\','\\\\') '''']);
         str_max = strcat(str_max,num2str(parameters.max(k)));
@@ -901,7 +902,7 @@ if options.write_parameters
         if isfield(parameters,'constraints')
             str_constr_A = strcat(str_constr_A,num2str(parameters.constraints.A(k)));
         end
-        
+
         if k < length(parameters.name)
             fprintf(fid,',...\n');
             str_max = [str_max ';'];
@@ -913,8 +914,8 @@ if options.write_parameters
             str_min = [str_min '];'];
             str_constr_A = [str_constr_A '];'];
         end
-        
-        
+
+
     end
     fprintf(fid, 'parameters.number = length(parameters.name);\n');
     fprintf(fid,[str_max '\n']);
@@ -1039,7 +1040,7 @@ second_expr = jacobian(sym_expr{s,e},sym_expr2)*dsym_expr2dxi;
 str_dzdxi = [str_dzdxi, 'bsxfun(@plus,['];
 for k = 1:length(second_expr)
     str_dzdxi = strcat(str_dzdxi,replace_by_bsxfun(char(second_expr(k))));
-    
+
     if k < length(second_expr)
         str_dzdxi = [str_dzdxi '; '];
     end
@@ -1117,14 +1118,14 @@ while not(isempty(idx_div) && isempty(idx_mult)) %loop until no / and * are in t
             strs{idx_mult(i)+1} = [strs{idx_mult(i)+1} ')'];
         end
     end
-    
+
     % current indices
     idx_leftbr = find(strcmp(strs,'('));
     idx_rightbr = find(strcmp(strs,')'));
     assert(numel(idx_leftbr) == numel(idx_rightbr))
     idx_div = find(strcmp(strs,'/'));
     idx_mult = find(strcmp(strs,'*'));
-    
+
     % get bracket pairs
     if ~isempty(idx_rightbr)
         count = 1;
@@ -1135,7 +1136,7 @@ while not(isempty(idx_div) && isempty(idx_mult)) %loop until no / and * are in t
             count = count+1;
         end
         [~,idx_pair] = min(pair(:,2)-pair(1));
-        
+
         % pair closest together
         pair = pair(idx_pair,:);
         flag = true;
@@ -1185,4 +1186,3 @@ if contains(initstring ,{'log','sin','cos','tan','tanh'})
     disp(finalstring);
 end
 end
-

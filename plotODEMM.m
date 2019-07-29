@@ -284,7 +284,7 @@ for e = options.I
                         figure(fh{e-1});
                     end
                 end
-                
+
                 k=1;
                 c=1;
                 for d=1:numel(tu_ind{e})
@@ -292,7 +292,7 @@ for e = options.I
                         evalModel(xi,M,D,e,r,tu_ind{e}(d),X_c,options,conditions);
                     end
                     [lim,hists,grids]=setYminmaxHists(D,e,tu_ind{e}(d),options,inds(ind),M);
-                    
+
                     if D(e).n_dim == 2 && ~isempty(M)
                         if inds(ind) == 0
                             if options.data.kde
@@ -339,7 +339,7 @@ for e = options.I
                             sy = ceil(numel(tu_ind{e})/sx);
                             subplot(sx,sy,d);
                         end
-                        
+
                         evalPdf(M,D,e,tu_ind{e}(d),k,options,0,inds(ind),lim,hists,grids,0,1);
                     else
                         if options.subplot_lin
@@ -349,9 +349,9 @@ for e = options.I
                             sy = ceil(numel(tu_ind{e})/sx);
                             subplot(sx,sy,d);
                         end
-                        
+
                         evalPdf(M,D,e,tu_ind{e}(d),k,options,0,inds(ind),lim,hists,grids,1,1);
-                        
+
                         if tu_ind{e}(d)~=1
                             if options.plainstyle
                                 set(gca,'xtick','');
@@ -493,7 +493,7 @@ if D(e).n_dim == 1 || ind > 0
         y_min{e} = options.boundaries(e).y_min;
         y_max{e} = options.boundaries(e).y_max;
     end
-    
+
     if ~isempty(M) && strcmp(M.distribution{1,e},'neg_binomial')
         switch options.x_scale
             case 'lin'
@@ -633,6 +633,7 @@ if ~isempty(M)
                         p_s{s} = w{s}(k)*pdf('logn',y_grid,mu{s}(k),sigma{s}(k));
                         cp = cp + w{s}(k)*cdf('logn',y_grid,mu{s}(k),sigma{s}(k));
                     end
+                case 'norm'
                 case 'norm'
                     if ind > 0
                         Sigma_temp = permute(Sigma{s}(k,:,:),[2,3,1]);
@@ -832,7 +833,7 @@ else
         if ~options.data.kde & legendflag
             legend('data','model')
         end
-        
+
     end
 end
 if ~isempty(options.xtick{e})
